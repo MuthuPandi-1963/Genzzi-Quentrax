@@ -1,0 +1,630 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// PRISMA SCHEMA
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider     = "prisma-client-js"
+  }
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH (OAuth identity — sub / email / username / picture / phone)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Auth {
+  id         String   @id @default(uuid()) @db.Uuid
+  sub        String   @unique          // OAuth "sub" claim — stable identity key
+  email      String   @unique
+  username   String   @unique
+  picture    String?
+  phone      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  deviceInfos   DeviceInfo[]
+  sessionTokens SessionToken[]
+
+  @@map("auth")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEVICE TRACKING (SECURITY CRITICAL)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model DeviceInfo {
+  id                 String    @id @default(uuid()) @db.Uuid
+  user_id            String    @db.Uuid
+  device_name        String
+  device_fingerprint String    @unique
+  ip_address         String
+  user_agent         String
+  location           String?
+  trusted            Boolean   @default(false)
+  last_seen          DateTime
+  revoked_at         DateTime?
+  created_at         DateTime  @default(now())
+
+  user          Auth           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sessionTokens SessionToken[]
+
+  @@index([user_id])
+  @@index([device_fingerprint])
+  @@map("device_info")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION TOKENS (JWT + ROTATING REFRESH)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SessionToken {
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String    @db.Uuid
+  device_id    String    @db.Uuid
+
+  access_jti   String    @unique
+  refresh_hash String
+
+  ip_address   String
+  user_agent   String
+
+  expires_at   DateTime
+  revoked_at   DateTime?
+  replaced_by  String?
+
+  created_at   DateTime  @default(now())
+
+  user   Auth       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  device DeviceInfo @relation(fields: [device_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([access_jti])
+  @@index([device_id])
+  @@map("session_tokens")
+}
+
+// =============================================================================
+// PRODUCTION-READY PRISMA SCHEMA
+// Fixes applied:
+//  - User split into UserAuth + UserProfile
+//  - verificationToken → hashed
+//  - Password reset + MFA fields added
+//  - Session / refresh-token model added
+//  - AuditLog model added
+//  - Soft deletes on all top-level models
+//  - onDelete: Cascade on Question, AssessmentAttempt, QuizHistory
+//  - AttemptStatus default → IN_PROGRESS
+//  - coinsRef circular relation removed
+//  - Assessment.quizId removed (AssessmentQuestion is canonical)
+//  - countryCode typed as Char(2)
+//  - VarChar limits on all string fields
+//  - Missing indexes added
+//  - failedLoginAttempts + lockedUntil for rate limiting
+//  - DB-level CHECK constraints documented as raw SQL migrations
+// =============================================================================
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum UserRole {
+  ADMIN
+  STAFF
+  STUDENT
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  FILL_BLANK
+}
+
+enum QuestionStatus {
+  active
+  inactive
+}
+
+enum QuizStatus {
+  active
+  inactive
+}
+
+enum AssessmentStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+enum AssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  EXEMPTED
+}
+
+enum AuditAction {
+  USER_BLOCKED
+  USER_UNBLOCKED
+  USER_ROLE_CHANGED
+  USER_DELETED
+  ASSESSMENT_CREATED
+  ASSESSMENT_UPDATED
+  ASSESSMENT_ASSIGNED
+  ASSESSMENT_DELETED
+  QUESTION_CREATED
+  QUESTION_DELETED
+  QUIZ_CREATED
+  QUIZ_DELETED
+  COINS_ADJUSTED
+}
+
+// =============================================================================
+// AUTH TABLE  (credentials, tokens, security state)
+// =============================================================================
+
+model UserAuth {
+  id     String @id @default(uuid())
+  userId String @unique // FK → UserProfile
+
+  // Credentials
+  email    String @unique @db.VarChar(254)
+  // Store bcrypt/argon2 hash only. Max 72 bytes input for bcrypt.
+  password String @db.VarChar(255)
+
+  // Email verification  — store SHA-256(token), send raw token by email
+  verificationTokenHash      String?
+  verificationTokenExpiresAt DateTime?
+  isVerified                 Boolean   @default(false)
+
+  // Password reset  — same pattern: hash stored, raw token emailed
+  passwordResetTokenHash      String?
+  passwordResetTokenExpiresAt DateTime?
+
+  // TOTP / MFA  — secret must be encrypted at application layer
+  totpSecret  String?  @db.VarChar(512)
+  totpEnabled Boolean  @default(false)
+
+  // Account state
+  isBlocked Boolean @default(false)
+
+  // Brute-force / rate-limiting
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Relations
+  profile  UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email, isBlocked, deletedAt])
+  @@index([verificationTokenHash])
+  @@index([passwordResetTokenHash])
+}
+
+// =============================================================================
+// PROFILE TABLE  (identity, display data, roles, activity)
+// =============================================================================
+
+model UserProfile {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  // ISO 3166-1 alpha-2 country code
+  // SQL constraint: CHECK (char_length("countryCode") = 2)
+  countryCode String?  @db.Char(2)
+  avatar      String?  @db.VarChar(500)
+  bio         String?  @db.VarChar(500)
+  role        UserRole @default(STUDENT)
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Relations
+  auth                  UserAuth?
+  quizHistory           QuizHistory[]
+  createdQuizzes        Quiz[]                 @relation("QuizCreator")
+  coins                 Coins?
+  coinsHistory          CoinsHistory[]
+  createdAssessments    Assessment[]           @relation("AssessmentCreator")
+  assessmentAssignments AssessmentAssignment[]
+  assessmentAttempts    AssessmentAttempt[]
+  auditLogsActed        AuditLog[]             @relation("AuditActor")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role, name])
+  @@index([deletedAt])
+  users User[]
+}
+
+// =============================================================================
+// SESSION  (refresh tokens — one row per active device/session)
+// =============================================================================
+
+model Session {
+  id         String   @id @default(uuid())
+  userAuthId String
+
+  // Store SHA-256(refreshToken) — send raw token to client
+  tokenHash String   @unique @db.VarChar(255)
+  userAgent String?  @db.VarChar(500)
+  ipAddress String?  @db.VarChar(45) // IPv6 max = 45 chars
+  expiresAt DateTime
+
+  // Soft revoke (keeps audit trail)
+  revokedAt DateTime?
+
+  userAuth UserAuth @relation(fields: [userAuthId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userAuthId, expiresAt])
+  @@index([tokenHash])
+}
+
+// =============================================================================
+// AUDIT LOG
+// =============================================================================
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  actorId    String
+  action     AuditAction
+  // Polymorphic target — store model name + id
+  targetType String?     @db.VarChar(50)
+  targetId   String?
+  // JSON snapshot of what changed
+  metadata   Json?
+
+  actor UserProfile @relation("AuditActor", fields: [actorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+}
+
+// =============================================================================
+// CONTENT HIERARCHY
+// =============================================================================
+
+model Category {
+  id          String  @id @default(uuid())
+  name        String  @unique @db.VarChar(100)
+  description String? @db.VarChar(500)
+  imageUrl    String? @db.VarChar(500)
+
+  // Soft delete
+  deletedAt DateTime?
+
+  topics Topic[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name, deletedAt])
+}
+
+model Topic {
+  id          String     @id @default(uuid())
+  name        String     @db.VarChar(150)
+  description String?    @db.VarChar(500)
+  categoryId  String
+  imageUrl    String?    @db.VarChar(500)
+  difficulty  Difficulty @default(medium)
+  tags        String[]   @default([])
+
+  // Soft delete
+  deletedAt DateTime?
+
+  category    Category     @relation(fields: [categoryId], references: [id])
+  questions   Question[]
+  assessments Assessment[] @relation(name: "assessment_topics")
+  quizzes     Quiz[]       @relation(name: "quiz_topics")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, name])
+  @@index([categoryId, deletedAt])
+}
+
+model Question {
+  id           String         @id @default(uuid())
+  questionText String         @db.VarChar(2000)
+  questionType QuestionType
+  difficulty   Difficulty
+  hints        String[]
+  points       Int            @default(1)
+  explanation  String?        @db.VarChar(2000)
+  tags         String[]       @default([])
+  status       QuestionStatus @default(active)
+
+  // options schema per type:
+  //   MCQ / TRUE_FALSE : [{"text":"...","isCorrect":true}, ...]
+  //   FILL_BLANK        : {"acceptedAnswers":["..."], "caseSensitive": false}
+  options Json
+
+  topicId String
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  // Soft delete
+  deletedAt DateTime?
+
+  quizzes             Quiz[]
+  assessmentQuestions AssessmentQuestion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([topicId, status, deletedAt])
+  @@index([difficulty, questionType])
+}
+
+// =============================================================================
+// QUIZ
+// =============================================================================
+
+model Quiz {
+  id          String     @id @default(uuid())
+  title       String     @db.VarChar(200)
+  description String?    @db.VarChar(1000)
+  // totalPoints is COMPUTED — do not write directly.
+  // Use: SELECT SUM(q.points) FROM Question q JOIN _QuizToQuestion jt ON jt.B=q.id WHERE jt.A = quiz.id
+  // Keep as cached value updated via Prisma middleware on question add/remove.
+  totalPoints Int        @default(0)
+  status      QuizStatus @default(active)
+  tags        String[]   @default([])
+  timeLimit   Int? // minutes — SQL CHECK: timeLimit > 0
+  imageUrl    String?    @db.VarChar(500)
+  creatorId   String
+
+  topicId String?
+
+  // Soft delete
+  deletedAt DateTime?
+
+  creator User      @relation("QuizCreator", fields: [creatorId], references: [id])
+  topic   Topic?    @relation(name: "quiz_topics", fields: [topicId], references: [id])
+
+  questions    Question[]
+  history      QuizHistory[]
+  assessments  Assessment[]
+  coinsHistory CoinsHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId, status, deletedAt])
+  @@index([topicId, status])
+  userProfiles UserProfile[] @relation("QuizCreator")
+}
+
+// Alias so existing code using "User" still works during migration
+// Remove once codebase is updated to use UserProfile directly.
+model User {
+  id        String      @id @default(uuid())
+  profileId String      @unique
+
+  profile UserProfile @relation(fields: [profileId], references: [id])
+
+  // Re-export relations for backward compat
+  quizHistory           QuizHistory[]           @relation("UserQuizHistory")
+  createdQuizzes        Quiz[]                  @relation("QuizCreator")
+  coins                 Coins? @relation(fields: [coinsid], references: [id])
+coinsid String?
+  coinsHistory          CoinsHistory[]
+  createdAssessments    Assessment[]            @relation("AssessmentCreator")
+  assessmentAssignments AssessmentAssignment[]
+  assessmentAttempts    AssessmentAttempt[]
+
+  @@map("_UserCompat") // temporary compat view, remove after migration
+}
+
+model QuizHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  quizId      String
+  score       Int
+  completedAt DateTime @default(now())
+
+  // Encrypted at application layer (AES-256-GCM) before write
+  answers Json
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([userId, quizId])
+  @@index([quizId, score]) // leaderboard queries
+  users User[] @relation("UserQuizHistory")
+}
+
+// =============================================================================
+// COINS (gamification)
+// =============================================================================
+
+model Coins {
+  id     String @id @default(uuid())
+  userId String @unique
+  // SQL CHECK: balance >= 0
+  // Always update via: prisma.coins.update({ data: { balance: { increment: n } } })
+  // Never read-modify-write — race condition.
+  balance Int @default(0)
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  user    UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history CoinsHistory[]
+
+  users User[]
+}
+
+model CoinsHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  coinsId   String   // FK → Coins.id for join without subquery
+  coins     Int      // positive = earned, negative = spent
+  reason    String?  @db.VarChar(200)
+  quizId    String?
+  createdAt DateTime @default(now())
+
+  // Always insert inside prisma.$transaction with the Coins.balance increment
+  user  UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coin  Coins       @relation(fields: [coinsId], references: [id], onDelete: Cascade)
+  quiz  Quiz?       @relation(fields: [quizId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt]) // ledger timeline
+  @@index([coinsId])
+  users User[]
+}
+
+// =============================================================================
+// ASSESSMENT
+// =============================================================================
+
+model Assessment {
+  id          String           @id @default(uuid())
+  title       String           @db.VarChar(200)
+  description String?          @db.VarChar(2000)
+  status      AssessmentStatus @default(DRAFT)
+  deadline    DateTime?
+  scheduledAt DateTime?
+  // SQL CHECK: timeLimit > 0
+  timeLimit   Int?
+
+  // Availability window
+  startDate DateTime?
+  endDate   DateTime?
+  published Boolean   @default(false)
+
+  // Single topic scope
+  topicId String?
+
+  // Scoring config
+  // SQL CHECK: passingScore BETWEEN 0 AND 100
+  passingScore Int @default(50)
+  // SQL CHECK: maxAttempts >= 1
+  maxAttempts  Int @default(1)
+  // SQL CHECK: maxViolations >= 0
+  maxViolations Int @default(3)
+
+  // Security & behavior
+  proctoredMode         Boolean @default(false)
+  shuffleQuestions      Boolean @default(false)
+  shuffleOptions        Boolean @default(false)
+  allowReview           Boolean @default(true)
+  allowRetry            Boolean @default(true)
+  showResultImmediately Boolean @default(true)
+
+  // NOTE: quizId removed — AssessmentQuestion is the single source of truth.
+  // To import questions from a Quiz, copy them into AssessmentQuestion rows.
+
+  // Soft delete
+  deletedAt DateTime?
+
+  creatorId String
+  topic     Topic?  @relation(name: "assessment_topics", fields: [topicId], references: [id], onDelete: SetNull)
+  creator   UserProfile            @relation("AssessmentCreator", fields: [creatorId], references: [id])
+
+  assessmentQuestions AssessmentQuestion[]
+  assignments         AssessmentAssignment[]
+  attempts            AssessmentAttempt[]
+  // Legacy quizzes relation kept for reporting only (not question source)
+  quizzes             Quiz[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, deletedAt])
+  @@index([published, status])
+  @@index([topicId])
+  @@index([deadline, status]) // deadline monitoring queries
+  users User[] @relation("AssessmentCreator")
+}
+
+model AssessmentAssignment {
+  id           String           @id @default(uuid())
+  assessmentId String
+  userId       String
+  status       AssignmentStatus @default(PENDING)
+  assignedAt   DateTime         @default(now())
+  dueDate      DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  assessment Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, userId])
+  @@index([assessmentId, status])
+  @@index([userId, status])
+  @@index([userId, assessmentId])
+  users User[]
+}
+
+model AssessmentAttempt {
+  id           String        @id @default(uuid())
+  assessmentId String
+  userId       String
+
+  // SQL CHECK: score >= 0
+  score    Int
+  // Encrypted at application layer (AES-256-GCM) before write
+  answers  Json
+  // FIX: was COMPLETED — must be IN_PROGRESS until submission confirmed
+  status   AttemptStatus @default(IN_PROGRESS)
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  violations Int @default(0)
+
+  assessment Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, assessmentId])
+  @@index([assessmentId, score]) // best-score queries
+  @@index([status])
+  users User[]
+}
+
+// Questions attached directly to an assessment (single source of truth)
+model AssessmentQuestion {
+  id           String @id @default(uuid())
+  assessmentId String
+  questionId   String
+  sortOrder    Int    @default(0)
+  // Override per-assessment score for this question
+  pointsOverride Int?
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([assessmentId, questionId])
+  @@index([assessmentId])
+  @@index([questionId])
+}

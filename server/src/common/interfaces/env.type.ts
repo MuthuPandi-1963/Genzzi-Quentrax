@@ -1,0 +1,75 @@
+export interface EnvConfig {
+  ALLOWED_ORIGINS: string;
+  NODE_ENV: "dev" | "prod" | "test";
+  PORT: number;
+  DATABASE_URL: string;
+  JWT_SECRET: string;
+  LOG_LEVEL: string;
+  LOG_SECRET: boolean;
+  LOG_DESTINATION: string;
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  REDIS_PASSWORD: string;
+  WEB_CLIENT_URL: "http://localhost:5173";
+  // ──────────────── MAIL CONFIG ────────────────
+  MAIL_HOST: string;
+  MAIL_PORT: number;
+  MAIL_SECURE: boolean;
+  MAIL_USER: string;
+  MAIL_PASS: string;
+  MAIL_DEFAULT_FROM: string;
+  ACCESS_SECRET: string;
+  REFRESH_SECRET: string;
+  ACCESS_EXPIRATION: string;
+  REFRESH_EXPIRATION: string;
+  SERVER_URL: string;
+  ID_TOKEN_EXPIRATION: string;
+  ID_TOKEN_SECRET: string;
+  LOKI_TOKEN: string;
+  RESEND_API_KEY: string;
+  CLOUDINARY_NAME: string;
+  CLOUDINARY_KEY: string;
+  CLOUDINARY_SECRET: string;
+  MAIL_FROM: string;
+  MAIL_FROM_ADDRESS: string;
+  GENZZI_CLIENT_ID: string;
+  GENZZI_CLIENT_SECRET: string;
+  GENZZI_REDIRECT_URI: string;
+}
+export const exportDefaults: EnvConfig = {
+  WEB_CLIENT_URL: "http://localhost:5173",
+  SERVER_URL: "",
+  NODE_ENV: "dev",
+  PORT: 3000,
+  DATABASE_URL: "",
+  JWT_SECRET: "PRANK",
+  LOG_LEVEL: "debug",
+  LOG_SECRET: true,
+  LOG_DESTINATION: "",
+  ID_TOKEN_EXPIRATION: "1h",
+  ID_TOKEN_SECRET: "genzzi-id",
+  CLOUDINARY_NAME: "",
+  CLOUDINARY_KEY: "",
+  CLOUDINARY_SECRET: "",
+  MAIL_FROM: "",
+  MAIL_FROM_ADDRESS: "",
+  REDIS_HOST: "localhost",
+  REDIS_PORT: 0,
+  REDIS_PASSWORD: "",
+  ALLOWED_ORIGINS: "",
+  MAIL_HOST: "",
+  MAIL_PORT: 0,
+  MAIL_SECURE: false,
+  MAIL_USER: "",
+  MAIL_PASS: "",
+  MAIL_DEFAULT_FROM: "",
+  ACCESS_SECRET: "genzzi-access",
+  REFRESH_SECRET: "genzzi-refresh",
+  RESEND_API_KEY: "",
+  ACCESS_EXPIRATION: "",
+  REFRESH_EXPIRATION: "",
+  LOKI_TOKEN: "",
+  GENZZI_CLIENT_ID: "",
+  GENZZI_CLIENT_SECRET: "",
+  GENZZI_REDIRECT_URI: "",
+};
