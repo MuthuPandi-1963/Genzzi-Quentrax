@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -20,7 +20,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-
 /* ═══════════════════════════════════════════════════════════════
    QUENTRAX — CATEGORIES PAGE
    Browse all quiz categories. Deep Purple + Neon + Glassmorphism.
@@ -123,6 +122,30 @@ export default function CategoriesPage() {
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
+  // Deterministic particle positions and timings (pure functions) to avoid impure calls during render
+  const particles = useMemo(() => {
+    const rand = (n: number) => {
+      const x = Math.sin(n) * 10000;
+      return x - Math.floor(x);
+    };
+
+    return Array.from({ length: 12 }).map((_, i) => {
+      const r1 = rand(i + 1);
+      const r2 = rand(i + 101);
+      const r3 = rand(i + 201);
+      const r4 = rand(i + 301);
+
+      return {
+        width: r1 * 3 + 1,
+        height: r2 * 3 + 1,
+        left: `${r3 * 100}%`,
+        top: `${r4 * 100}%`,
+        duration: r2 * 5 + 5,
+        delay: rand(i + 401) * 3,
+      };
+    });
+  }, []);
+
   const filteredCategories = categoriesData.filter(
     (cat) =>
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,15 +171,15 @@ export default function CategoriesPage() {
     >
       {/* Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(12)].map((_, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full"
             style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              width: p.width,
+              height: p.height,
+              left: p.left,
+              top: p.top,
               background: isDark
                 ? "radial-gradient(circle, hsl(263 70% 58% / 0.3) 0%, transparent 70%)"
                 : "radial-gradient(circle, hsl(263 70% 58% / 0.1) 0%, transparent 70%)",
@@ -166,9 +189,9 @@ export default function CategoriesPage() {
               opacity: [0.2, 0.4, 0.2],
             }}
             transition={{
-              duration: Math.random() * 5 + 5,
+              duration: p.duration,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: p.delay,
             }}
           />
         ))}
