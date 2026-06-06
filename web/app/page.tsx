@@ -321,28 +321,51 @@ export default function QuentraxLanding() {
       >
         {/* Floating Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="particle"
-              style={{
-                width: Math.random() * 4 + 2,
-                height: Math.random() * 4 + 2,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                x: [0, Math.random() * 20 - 10, 0],
-                opacity: [0.2, 0.6, 0.2],
-              }}
-              transition={{
-                duration: Math.random() * 5 + 5,
-                repeat: Infinity,
-                delay: Math.random() * 3,
-              }}
-            />
-          ))}
+          {Array.from({ length: 20 }).map((_, i) => {
+            // Deterministic particle positions to avoid SSR hydration mismatches
+            const rand = (n: number) => {
+              const x = Math.sin(n) * 10000;
+              return x - Math.floor(x);
+            };
+
+            const r1 = rand(i + 1);
+            const r2 = rand(i + 101);
+            const r3 = rand(i + 201);
+            const r4 = rand(i + 301);
+            const r5 = rand(i + 401);
+            const r6 = rand(i + 501);
+
+            const width = r1 * 4 + 2;
+            const height = r2 * 4 + 2;
+            const left = `${r3 * 100}%`;
+            const top = `${r4 * 100}%`;
+            const xOffset = r5 * 20 - 10;
+            const duration = r6 * 5 + 5;
+            const delay = rand(i + 601) * 3;
+
+            return (
+              <motion.div
+                key={i}
+                className="particle"
+                style={{
+                  width,
+                  height,
+                  left,
+                  top,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  x: [0, xOffset, 0],
+                  opacity: [0.2, 0.6, 0.2],
+                }}
+                transition={{
+                  duration,
+                  repeat: Infinity,
+                  delay,
+                }}
+              />
+            );
+          })}
         </div>
 
         {/* Hero Glow Orb */}
