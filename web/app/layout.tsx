@@ -1,14 +1,17 @@
-"use client"
+// app/layout.tsx  ← ThemeProvider goes HERE, not in (public)/layout.tsx
 import { QueryProvider } from "@/providers/query-client.provider";
-import "./globals.css"
-export default function Rootlayout({ children }: { children: React.ReactNode }) {
+import { ThemeProvider } from "next-themes";
+import './globals.css'
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <QueryProvider>
-        {children}
-        </QueryProvider>
-        </body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryProvider>
+          {children}
+          </QueryProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

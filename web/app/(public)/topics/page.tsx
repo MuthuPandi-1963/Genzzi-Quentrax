@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Search, Filter } from "lucide-react";
 import TopicCard from "@/components/data-display/TopicCard";
 import EmptyState from "@/components/feedback/EmptyState";
+import { useTheme } from "next-themes";
 
 // Mock data
 const mockTopics = [
@@ -17,6 +18,9 @@ const mockTopics = [
 ];
 
 export default function TopicsBrowserPage() {
+  const {resolvedTheme} = useTheme()
+  console.log(resolvedTheme);
+  
   const [search, setSearch] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
 
@@ -27,7 +31,7 @@ export default function TopicsBrowserPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className={`min-h-screen bg-transparent pt-24 pb-20 transition-colors duration-500`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}

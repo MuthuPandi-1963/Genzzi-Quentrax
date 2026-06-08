@@ -25,7 +25,7 @@ export default function CategoriesBrowserPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className="min-h-screen bg-background text-foreground pt-24 pb-20 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}

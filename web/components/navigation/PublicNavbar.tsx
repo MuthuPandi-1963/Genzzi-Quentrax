@@ -19,6 +19,7 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 /* ─── Props ───────────────────────────────────────────────── */
 
@@ -62,8 +63,8 @@ function MobileNavItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
         isActive
-          ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20"
-          : "text-[var(--color-foreground-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+          ? "bg-(--color-primary)/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20"
+          : "text-(--color-foreground-muted) hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
       }`}
     >
       <Icon className="w-5 h-5" />
@@ -116,19 +117,25 @@ function DesktopNavLink({
 
 /* ─── Main Navbar ─────────────────────────────────────────── */
 
-export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
+export default function Navbar() {
+  const {theme,setTheme,resolvedTheme} = useTheme()
+  console.log(theme);
+  
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
+  const isDark  = resolvedTheme === 'dark';
+  const toggleTheme = ()=>{
+    setTheme((prev)=>prev=="light" ? "dark" : "light")
+  }
   const { scrollY } = useScroll();
   const navBackground = useTransform(
     scrollY,
     [0, 50],
     isDark
       ? ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]
-      : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.85)"]
+      : ["rgba(255, 255, 255, 1)", "rgba(255, 255, 255, 0.85)"]
   );
   const navBackdrop = useTransform(
     scrollY,
@@ -144,7 +151,9 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
   );
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    (async()=>{
+      setIsMobileMenuOpen(false)
+    })();
   }, [pathname]);
 
   useEffect(() => {
@@ -178,19 +187,19 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-lg shadow-[var(--color-primary)]/20">
-                <Sparkles className="w-5 h-5 text-white relative z-10" />
+              <div className="relative w-9 h-9 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent) flex items-center justify-center shadow-lg shadow-(--color-primary)/20">
+                <Sparkles className="w-5 h-5 relative z-10" />
                 <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)]"
+                  className="absolute inset-0 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent)"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-black text-[var(--color-foreground)] leading-tight tracking-tight">
+                <p className="text-lg font-black  leading-tight tracking-tight">
                   Quentrax
-                </span>
-                <span className="text-[10px] text-[var(--color-foreground-subtle)] leading-none tracking-wider uppercase">
+                </p>
+                <span className="text-[10px] text-foreground-subtle leading-none tracking-wider uppercase">
                   by Genzzi
                 </span>
               </div>
@@ -213,7 +222,7 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
+                className="w-9 h-9 rounded-lg  flex items-center justify-center text-(--color-foreground-muted) hover:text-background dark:hover:text-foreground transition-colors"
               >
                 <Search className="w-4 h-4" />
               </motion.button>
@@ -222,7 +231,7 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
                 whileHover={{ scale: 1.1, rotate: 180 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleTheme}
-                className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
+                className="w-9 h-9 rounded-lg  flex items-center justify-center text-(--color-foreground-muted) hover:text-background dark:hover:text-foreground transition-colors"
               >
                 <AnimatePresence mode="wait">
                   {isDark ? (
@@ -362,7 +371,7 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-[var(--color-background)]/80 backdrop-blur-xl z-40 lg:hidden"
+              className="fixed inset-0 bg-background/80 backdrop-blur-xl z-40 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
