@@ -18,12 +18,14 @@ import {
   Grid3X3,
   List,
   Sparkles,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useCategories } from "@/hooks/useCategories"
+
 /* ═══════════════════════════════════════════════════════════════
-   QUENTRAX — CATEGORIES PAGE
-   Browse all quiz categories. Deep Purple + Neon + Glassmorphism.
-   Dark & Light Themes with Animated UX
+   QUENTRAX — CATEGORIES PAGE (React Query Integration)
    ═══════════════════════════════════════════════════════════════ */
 
 interface Category {
@@ -37,80 +39,27 @@ interface Category {
   icon: React.ReactNode;
 }
 
-const categoriesData: Category[] = [
-  {
-    id: "1",
-    name: "Science",
-    description: "Physics, Chemistry, Biology, and the wonders of the natural world.",
-    topicCount: 42,
-    quizCount: 128,
-    color: "hsl(190,90%,50%)",
-    icon: <FlaskConical className="w-8 h-8" />,
-  },
-  {
-    id: "2",
-    name: "Technology",
-    description: "Programming, AI, cybersecurity, and digital innovation.",
-    topicCount: 35,
-    quizCount: 96,
-    color: "hsl(263,70%,58%)",
-    icon: <Cpu className="w-8 h-8" />,
-  },
-  {
-    id: "3",
-    name: "History",
-    description: "Ancient civilizations, world wars, and pivotal moments in time.",
-    topicCount: 28,
-    quizCount: 84,
-    color: "hsl(30,80%,55%)",
-    icon: <History className="w-8 h-8" />,
-  },
-  {
-    id: "4",
-    name: "Geography",
-    description: "Countries, capitals, landscapes, and global cultures.",
-    topicCount: 31,
-    quizCount: 92,
-    color: "hsl(217,90%,60%)",
-    icon: <Globe className="w-8 h-8" />,
-  },
-  {
-    id: "5",
-    name: "Arts",
-    description: "Music, painting, literature, cinema, and creative expression.",
-    topicCount: 22,
-    quizCount: 64,
-    color: "hsl(330,80%,60%)",
-    icon: <Palette className="w-8 h-8" />,
-  },
-  {
-    id: "6",
-    name: "Sports",
-    description: "Football, basketball, olympics, and athletic achievements.",
-    topicCount: 26,
-    quizCount: 78,
-    color: "hsl(142,70%,50%)",
-    icon: <Trophy className="w-8 h-8" />,
-  },
-  {
-    id: "7",
-    name: "Mathematics",
-    description: "Algebra, calculus, geometry, and logical problem solving.",
-    topicCount: 18,
-    quizCount: 56,
-    color: "hsl(280,80%,65%)",
-    icon: <BookOpen className="w-8 h-8" />,
-  },
-  {
-    id: "8",
-    name: "General Knowledge",
-    description: "Trivia, current affairs, and everything in between.",
-    topicCount: 15,
-    quizCount: 45,
-    color: "hsl(38,92%,55%)",
+// Deterministic icon & color mapping for API categories
+const CATEGORY_META: Record<string, { color: string; icon: React.ReactNode }> = {
+  Science: { color: "hsl(190,90%,50%)", icon: <FlaskConical className="w-8 h-8" /> },
+  Technology: { color: "hsl(263,70%,58%)", icon: <Cpu className="w-8 h-8" /> },
+  History: { color: "hsl(30,80%,55%)", icon: <History className="w-8 h-8" /> },
+  Geography: { color: "hsl(217,90%,60%)", icon: <Globe className="w-8 h-8" /> },
+  Arts: { color: "hsl(330,80%,60%)", icon: <Palette className="w-8 h-8" /> },
+  Sports: { color: "hsl(142,70%,50%)", icon: <Trophy className="w-8 h-8" /> },
+  Mathematics: { color: "hsl(280,80%,65%)", icon: <BookOpen className="w-8 h-8" /> },
+  "General Knowledge": { color: "hsl(38,92%,55%)", icon: <Sparkles className="w-8 h-8" /> },
+};
+
+const getCategoryMeta = (name: string) => {
+  if (CATEGORY_META[name]) return CATEGORY_META[name];
+  // Fallback deterministic
+  const hue = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+  return {
+    color: `hsl(${hue}, 70%, 60%)`,
     icon: <Sparkles className="w-8 h-8" />,
-  },
-];
+  };
+};
 
 export default function CategoriesPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -118,23 +67,34 @@ export default function CategoriesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  const { categories: rawCategories, isLoading, isError } = useCategories();
   const isDark = theme === "dark";
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
-  // Deterministic particle positions and timings (pure functions) to avoid impure calls during render
+  // Enrich API categories with visual meta
+  const categories: Category[] = useMemo(() => {
+    return rawCategories.map((cat: any) => {
+      const meta = getCategoryMeta(cat.name);
+      return {
+        ...cat,
+        color: meta.color,
+        icon: meta.icon,
+      };
+    });
+  }, [rawCategories]);
+
+  // Deterministic particle positions
   const particles = useMemo(() => {
     const rand = (n: number) => {
       const x = Math.sin(n) * 10000;
       return x - Math.floor(x);
     };
-
     return Array.from({ length: 12 }).map((_, i) => {
       const r1 = rand(i + 1);
       const r2 = rand(i + 101);
       const r3 = rand(i + 201);
       const r4 = rand(i + 301);
-
       return {
         width: r1 * 3 + 1,
         height: r2 * 3 + 1,
@@ -146,7 +106,7 @@ export default function CategoriesPage() {
     });
   }, []);
 
-  const filteredCategories = categoriesData.filter(
+  const filteredCategories = categories.filter(
     (cat) =>
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cat.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -251,7 +211,7 @@ export default function CategoriesPage() {
               }`}
             >
               <Sparkles className="w-4 h-4 text-[hsl(263,70%,58%)]" />
-              {categoriesData.length} Categories Available
+              {isLoading ? "Loading..." : `${categories.length} Categories Available`}
             </div>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4">
               <span className="text-gradient">Browse Categories</span>
@@ -326,7 +286,42 @@ export default function CategoriesPage() {
       <section className="pb-24 px-6">
         <div className="max-w-6xl mx-auto">
           <AnimatePresence mode="wait">
-            {filteredCategories.length === 0 ? (
+            {isLoading ? (
+              <motion.div
+                className="flex flex-col items-center justify-center py-20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Loader2 className={`w-10 h-10 animate-spin ${isDark ? "text-white/30" : "text-gray-400"}`} />
+                <p className={`mt-4 text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>Loading categories...</p>
+              </motion.div>
+            ) : isError ? (
+              <motion.div
+                className="flex flex-col items-center justify-center py-20 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 ${isDark ? "bg-red-500/10" : "bg-red-50"}`}>
+                  <AlertCircle className={`w-8 h-8 ${isDark ? "text-red-400" : "text-red-500"}`} />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Failed to load</h3>
+                <p className={`text-sm max-w-md mb-6 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                  Something went wrong while fetching categories. Please try again.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isDark
+                      ? "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700 border border-black/5"
+                  }`}
+                >
+                  Retry
+                </button>
+              </motion.div>
+            ) : filteredCategories.length === 0 ? (
               <motion.div
                 className="text-center py-20"
                 initial={{ opacity: 0 }}
@@ -384,14 +379,16 @@ export default function CategoriesPage() {
           </AnimatePresence>
 
           {/* Results Count */}
-          <motion.p
-            className={`text-center text-sm mt-10 ${isDark ? "text-white/40" : "text-gray-400"}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            Showing {filteredCategories.length} of {categoriesData.length} categories
-          </motion.p>
+          {!isLoading && !isError && (
+            <motion.p
+              className={`text-center text-sm mt-10 ${isDark ? "text-white/40" : "text-gray-400"}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              Showing {filteredCategories.length} of {categories.length} categories
+            </motion.p>
+          )}
         </div>
       </section>
 
@@ -500,7 +497,7 @@ function CategoryCard({
             }`}
             style={{ color: category.color }}
           >
-            Explore
+            Explore Topics
             <motion.div
               animate={isHovered ? { x: [0, 4, 0] } : {}}
               transition={{ duration: 0.6, repeat: isHovered ? Infinity : 0 }}

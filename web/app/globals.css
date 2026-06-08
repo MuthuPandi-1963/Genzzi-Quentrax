@@ -791,3 +791,44 @@
   .preserve-3d       { transform-style: preserve-3d; }
   .backface-hidden   { backface-visibility: hidden; }
 }
+/* ─── Shimmer Animation for Skeletons ─── */
+.skeleton {
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 25%,
+    var(--color-secondary) 50%,
+    var(--color-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Particle Utility (used in hero) ─── */
+.particle {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, hsl(263 70% 58% / 0.3) 0%, transparent 70%);
+}
+
+/* ─── Glass Card Large Variant ─── */
+.glass-card-lg {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-surface);
+  backdrop-filter: blur(40px) saturate(1.4);
+  box-shadow: var(--glass-shadow-lg), var(--glass-shadow-inset);
+}
+
+/* ─── Radial Gradient Background Utility ─── */
+.bg-gradient-radial-purple {
+  background: radial-gradient(ellipse at top, hsl(263 70% 20% / 0.4), transparent 70%);
+}

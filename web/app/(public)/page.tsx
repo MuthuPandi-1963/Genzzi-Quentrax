@@ -1,7 +1,10 @@
 "use client";
-import SiteLogo from "../components/SiteLogo";
+
+import SiteLogo from "../../components/SiteLogo";
+import PublicNavbar from "@/components/navigation/PublicNavbar";
+import PublicFooter from "@/components/footer/PubicFooter";
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue, useAnimationFrame } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import {
   Shield,
   Lock,
@@ -15,38 +18,12 @@ import {
   Brain,
   Sparkles,
   ArrowRight,
-  Menu,
-  X,
-  Moon,
-  Sun,
   Code2,
   Globe,
-  Cpu,
   Award,
   TrendingUp,
   Target,
-  CheckCircle2,
 } from "lucide-react";
-
-/* ═══════════════════════════════════════════════════════════════
-   QUENTRAX — LANDING PAGE  (fixed + animated)
-   Bugs fixed:
-   1. Broken template literal in backgroundImage style
-   2. /logo.jpeg & /logo.png replaced with SiteLogo component
-   3. useScroll now targets window (no container ref), so hero
-      parallax/fade actually fires
-   4. Tagline interval was 19 000 ms (nearly invisible) → 3 000 ms
-   New animations:
-   - Magnetic cursor orb that follows the mouse
-   - Animated grid / star-field background
-   - Counter number roll-up on stats
-   - Staggered letter-by-letter brand name animation
-   - Feature cards with directional reveal on scroll
-   - Floating badge ticker in hero
-   - Hover spotlight on feature/category cards
-   ═══════════════════════════════════════════════════════════════ */
-
-/* ─── Data ─────────────────────────────────────────────────── */
 
 const heroTaglines = [
   "Think Beyond Answers.",
@@ -136,7 +113,6 @@ const testimonials = [
 
 /* ─── Helpers ───────────────────────────────────────────────── */
 
-/** Deterministic seeded pseudo-random (no hydration mismatch) */
 function seededRand(seed: number) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
@@ -144,7 +120,6 @@ function seededRand(seed: number) {
 
 /* ─── Sub-components ────────────────────────────────────────── */
 
-/** Animated counter that rolls from 0 → target when it enters view */
 function AnimatedCounter({
   value,
   suffix,
@@ -155,7 +130,7 @@ function AnimatedCounter({
   decimals?: number;
 }) {
   const [display, setDisplay] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
+  const ref = useRef<HTMLSpanElement | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
@@ -188,7 +163,6 @@ function AnimatedCounter({
   );
 }
 
-/** Spotlight card — mouse position drives a radial gradient */
 function SpotlightCard({
   children,
   className,
@@ -218,7 +192,6 @@ function SpotlightCard({
         overflow: "hidden",
       }}
     >
-      {/* Spotlight overlay */}
       <div
         style={{
           position: "absolute",
@@ -237,7 +210,6 @@ function SpotlightCard({
   );
 }
 
-/** Floating cursor orb that follows the mouse with spring physics */
 function CursorOrb({ isDark }: { isDark: boolean }) {
   const x = useMotionValue(-200);
   const y = useMotionValue(-200);
@@ -277,19 +249,15 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
 
 /* ─── Main component ────────────────────────────────────────── */
 
-export default function QuentraxLanding() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [currentTagline, setCurrentTagline] = useState(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  /* ── FIX 3: scroll against window, not a div ref ── */
+const [theme, setTheme] = useState<"dark" | "light">("light");
+  const [currentTagline, setCurrentTagline] = useState(0);
+
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
   const heroScale  = useTransform(scrollYProgress, [0, 0.12], [1, 0.92]);
   const heroY      = useTransform(scrollYProgress, [0, 0.12], [0, -60]);
 
-  /* ── FIX 4: tagline interval was 19 s — near invisible ── */
   useEffect(() => {
     const interval = setInterval(
       () => setCurrentTagline((p) => (p + 1) % heroTaglines.length),
@@ -298,16 +266,9 @@ export default function QuentraxLanding() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const toggleTheme = () => setTheme((p) => (p === "dark" ? "light" : "dark"));
   const isDark = theme === "dark";
 
-  /* ── FIX 1: backgroundImage template literal was broken ── */
   const bgImage = isDark
     ? `radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),
        radial-gradient(ellipse 60% 40% at 80% 80%, hsl(330 80% 30% / 0.15), transparent),
@@ -324,226 +285,14 @@ export default function QuentraxLanding() {
       }`}
       style={{ backgroundImage: bgImage, backgroundAttachment: "fixed" }}
     >
-      {/* Magnetic cursor orb */}
       <CursorOrb isDark={isDark} />
-
-      {/* ══ NAVIGATION ══════════════════════════════════════════ */}
-      <motion.nav
-        className={`fixed top-0 left-0 right-0 z-[300] transition-all duration-500 ${
-          scrolled
-            ? isDark
-              ? "bg-[hsl(260,50%,4%)]/80 backdrop-blur-xl border-b border-white/10"
-              : "bg-white/80 backdrop-blur-xl border-b border-black/5"
-            : "bg-transparent"
-        }`}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
-      >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <motion.div
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="relative w-10 h-10">
-              <SiteLogo variantIndex={0} className="w-full h-full object-contain" />
-              {isDark && (
-                <motion.div
-                  className="absolute inset-0 rounded-xl"
-                  style={{ boxShadow: "0 0 16px 4px hsl(263 70% 58% / 0.35)" }}
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-              )}
-            </div>
-            <span className="text-2xl font-bold tracking-tight">
-              <span className="text-gradient">Quentrax</span>
-            </span>
-          </motion.div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            {["Features", "How It Works", "Categories", "Security", "Testimonials"].map(
-              (item, i) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(/ /g, "-")}`}
-                  className={`text-sm font-medium transition-colors relative group ${
-                    isDark ? "text-white/70 hover:text-white" : "text-gray-600 hover:text-gray-900"
-                  }`}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.07 }}
-                  whileHover={{ y: -2 }}
-                >
-                  {item}
-                  {/* Animated underline */}
-                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-[hsl(263,70%,58%)] group-hover:w-full transition-all duration-300" />
-                </motion.a>
-              )
-            )}
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center gap-4">
-            <motion.button
-              onClick={toggleTheme}
-              className={`p-2.5 rounded-xl transition-all ${
-                isDark
-                  ? "bg-white/10 hover:bg-white/20 text-white"
-                  : "bg-black/5 hover:bg-black/10 text-gray-700"
-              }`}
-              whileHover={{ scale: 1.1, rotate: 180 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              <AnimatePresence mode="wait">
-                {isDark ? (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Moon className="w-5 h-5" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Sun className="w-5 h-5" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-
-            <div className="hidden md:flex items-center gap-3">
-              <motion.a
-                href="/login"
-                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  isDark
-                    ? "text-white/80 hover:text-white hover:bg-white/10"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-black/5"
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Sign In
-              </motion.a>
-              <motion.a
-                href="/register"
-                className="gradient-primary px-6 py-2.5 rounded-xl text-sm font-semibold text-white relative overflow-hidden"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {/* Shimmer sweep */}
-                <motion.div
-                  className="absolute inset-0 -translate-x-full"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
-                  }}
-                  animate={{ x: ["−100%", "200%"] }}
-                  transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 2 }}
-                />
-                Get Started
-              </motion.a>
-            </div>
-
-            <motion.button
-              className="md:hidden p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              whileTap={{ scale: 0.9 }}
-            >
-              <AnimatePresence mode="wait">
-                {mobileMenuOpen ? (
-                  <motion.div
-                    key="x"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                  >
-                    <X className="w-6 h-6" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                  >
-                    <Menu className="w-6 h-6" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              className={`md:hidden border-t ${
-                isDark
-                  ? "border-white/10 bg-[hsl(260,50%,4%)]/95"
-                  : "border-black/5 bg-white/95"
-              } backdrop-blur-xl`}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="px-6 py-4 space-y-3">
-                {["Features", "How It Works", "Categories", "Security", "Testimonials"].map(
-                  (item, i) => (
-                    <motion.a
-                      key={item}
-                      href={`#${item.toLowerCase().replace(/ /g, "-")}`}
-                      className={`block py-2 text-sm font-medium ${
-                        isDark ? "text-white/70" : "text-gray-600"
-                      }`}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: i * 0.06 }}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item}
-                    </motion.a>
-                  )
-                )}
-                <div className="pt-3 flex gap-3">
-                  <a
-                    href="/login"
-                    className="flex-1 text-center py-2.5 rounded-xl border border-current text-sm font-semibold"
-                  >
-                    Sign In
-                  </a>
-                  <a
-                    href="/register"
-                    className="flex-1 text-center py-2.5 rounded-xl gradient-primary text-sm font-semibold"
-                  >
-                    Get Started
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
+    
 
       {/* ══ HERO ════════════════════════════════════════════════ */}
       <motion.section
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
       >
-        {/* Animated grid */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -556,7 +305,6 @@ export default function QuentraxLanding() {
           }}
         />
 
-        {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 24 }).map((_, i) => {
             const left   = `${seededRand(i + 1) * 100}%`;
@@ -592,7 +340,6 @@ export default function QuentraxLanding() {
           })}
         </div>
 
-        {/* Hero glow orb */}
         <motion.div
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
           style={{
@@ -605,7 +352,6 @@ export default function QuentraxLanding() {
         />
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-          {/* Badge */}
           <motion.div
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-8 ${
               isDark
@@ -625,7 +371,6 @@ export default function QuentraxLanding() {
             Powered by Genzzi Identity Protocol v2.1
           </motion.div>
 
-          {/* Logo */}
           <motion.div
             className="flex justify-center mb-8"
             initial={{ opacity: 0, scale: 0.3, rotate: -20 }}
@@ -645,7 +390,6 @@ export default function QuentraxLanding() {
             </div>
           </motion.div>
 
-          {/* Brand name — letter-by-letter entrance */}
           <motion.h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 overflow-hidden">
             {"Quentrax".split("").map((char, i) => (
               <motion.span
@@ -665,7 +409,6 @@ export default function QuentraxLanding() {
             ))}
           </motion.h1>
 
-          {/* Animated tagline */}
           <div className="h-16 md:h-20 flex items-center justify-center mb-8">
             <AnimatePresence mode="wait">
               <motion.p
@@ -683,7 +426,6 @@ export default function QuentraxLanding() {
             </AnimatePresence>
           </div>
 
-          {/* Description */}
           <motion.p
             className={`max-w-2xl mx-auto text-lg mb-10 ${isDark ? "text-white/60" : "text-gray-500"}`}
             initial={{ opacity: 0, y: 20 }}
@@ -694,7 +436,6 @@ export default function QuentraxLanding() {
             decentralized identity. No passwords. No compromises.
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -737,7 +478,6 @@ export default function QuentraxLanding() {
             </motion.a>
           </motion.div>
 
-          {/* Stats Bar with roll-up counters */}
           <motion.div
             className={`grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto ${
               isDark
@@ -777,7 +517,6 @@ export default function QuentraxLanding() {
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
         <motion.div
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
           initial={{ opacity: 0 }}
@@ -821,7 +560,6 @@ export default function QuentraxLanding() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connector line between cards (desktop only) */}
             <div className="hidden md:block absolute top-1/2 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px bg-gradient-to-r from-transparent via-[hsl(263,70%,58%)]/40 to-transparent" />
 
             {howItWorks.map((item, i) => (
@@ -840,7 +578,6 @@ export default function QuentraxLanding() {
                   transition={{ delay: i * 0.18, type: "spring", stiffness: 100 }}
                   whileHover={{ y: -6 }}
                 >
-                  {/* Step number watermark */}
                   <motion.div
                     className="absolute top-4 right-4 text-7xl font-black select-none"
                     style={{ color: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" }}
@@ -977,7 +714,6 @@ export default function QuentraxLanding() {
             </p>
           </motion.div>
 
-          {/* Feature Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-16">
             {features.map((feature, i) => (
               <SpotlightCard
@@ -1011,7 +747,6 @@ export default function QuentraxLanding() {
             ))}
           </div>
 
-          {/* Why Genzzi */}
           <motion.div
             className={`${
               isDark
@@ -1077,7 +812,6 @@ export default function QuentraxLanding() {
             </div>
           </motion.div>
 
-          {/* Trust stats */}
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
@@ -1207,7 +941,7 @@ export default function QuentraxLanding() {
                   ))}
                 </div>
                 <p className={`text-sm mb-6 leading-relaxed ${isDark ? "text-white/80" : "text-gray-600"}`}>
-                  "{t.text}"
+                  {t.text}
                 </p>
                 <div className="flex items-center gap-3">
                   <motion.div
@@ -1253,7 +987,6 @@ export default function QuentraxLanding() {
           </div>
 
           <div className="relative z-10">
-            {/* ── FIX 2: use SiteLogo instead of broken /logo.jpeg ── */}
             <motion.div
               className="w-20 h-20 mx-auto mb-6"
               animate={{ rotate: [0, 5, -5, 0], y: [0, -6, 0] }}
@@ -1302,110 +1035,7 @@ export default function QuentraxLanding() {
         </motion.div>
       </section>
 
-      {/* ══ FOOTER ══════════════════════════════════════════════ */}
-      <footer className={`border-t ${isDark ? "border-white/10" : "border-black/5"} py-16 px-6`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            {/* Brand */}
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                {/* ── FIX 2: use SiteLogo instead of /logo.png ── */}
-                <SiteLogo variantIndex={0} className="w-8 h-8 object-contain" />
-                <span className="text-xl font-bold text-gradient">Quentrax</span>
-              </div>
-              <p className={`text-sm mb-4 ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                The next-generation quiz & assessment platform powered by Genzzi.
-              </p>
-              <div className={`flex items-center gap-2 text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                <Shield className="w-3 h-3" />
-                Secured by Genzzi v2.1
-              </div>
-            </div>
-
-            {/* Product */}
-            <div>
-              <h4 className="font-semibold mb-4 text-sm">Product</h4>
-              <ul className="space-y-2">
-                {["Quizzes", "Assessments", "Leaderboard", "Categories", "Pricing"].map((item) => (
-                  <li key={item}>
-                    <motion.a
-                      href={`/${item.toLowerCase()}`}
-                      className={`text-sm transition-colors ${
-                        isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-800"
-                      }`}
-                      whileHover={{ x: 4 }}
-                    >
-                      {item}
-                    </motion.a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className="font-semibold mb-4 text-sm">Resources</h4>
-              <ul className="space-y-2">
-                {["Documentation", "API Reference", "Blog", "Community", "Support"].map((item) => (
-                  <li key={item}>
-                    <motion.a
-                      href="#"
-                      className={`text-sm transition-colors ${
-                        isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-800"
-                      }`}
-                      whileHover={{ x: 4 }}
-                    >
-                      {item}
-                    </motion.a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="font-semibold mb-4 text-sm">Legal</h4>
-              <ul className="space-y-2">
-                {["Privacy Policy", "Terms of Service", "Cookie Policy", "Security"].map((item) => (
-                  <li key={item}>
-                    <motion.a
-                      href="#"
-                      className={`text-sm transition-colors ${
-                        isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-800"
-                      }`}
-                      whileHover={{ x: 4 }}
-                    >
-                      {item}
-                    </motion.a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div
-            className={`pt-8 border-t ${isDark ? "border-white/10" : "border-black/5"} flex flex-col md:flex-row items-center justify-between gap-4`}
-          >
-            <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
-              © 2026 Quentrax. All rights reserved. Secured by Genzzi Identity Protocol.
-            </p>
-            <div className="flex items-center gap-4">
-              {["Twitter", "GitHub", "Discord"].map((social) => (
-                <motion.a
-                  key={social}
-                  href="#"
-                  className={`text-xs transition-colors ${
-                    isDark ? "text-white/30 hover:text-white" : "text-gray-400 hover:text-gray-700"
-                  }`}
-                  whileHover={{ scale: 1.1, y: -2 }}
-                >
-                  {social}
-                </motion.a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+     
     </div>
   );
 }
