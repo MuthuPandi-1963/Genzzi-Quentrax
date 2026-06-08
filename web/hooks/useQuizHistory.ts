@@ -38,28 +38,28 @@ export const useQuizHistory = () => {
   const create = useMutation({
     mutationFn: QuizHistoryAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(["quiz-history"]);
+      queryClient.invalidateQueries({ queryKey: ["quiz-history"] });
     },
   });
 
   const createMany = useMutation({
     mutationFn: QuizHistoryAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries(["quiz-history"]);
+      queryClient.invalidateQueries({ queryKey: ["quiz-history"] });
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => QuizHistoryAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["quiz-history"]);
+      queryClient.invalidateQueries({ queryKey: ["quiz-history"] });
     },
   });
 
   const deleteEntry = useMutation({
     mutationFn: (id: string) => QuizHistoryAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["quiz-history"]);
+      queryClient.invalidateQueries({ queryKey: ["quiz-history"] });
     },
   });
 

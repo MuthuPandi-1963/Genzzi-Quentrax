@@ -30,28 +30,28 @@ export const useCoinsHistory = () => {
   const create = useMutation({
     mutationFn: CoinsHistoryAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(["coins-history"]);
+      queryClient.invalidateQueries({ queryKey: ["coins-history"] });
     },
   });
 
   const createMany = useMutation({
     mutationFn: CoinsHistoryAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries(["coins-history"]);
+      queryClient.invalidateQueries({ queryKey: ["coins-history"] });
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => CoinsHistoryAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["coins-history"]);
+      queryClient.invalidateQueries({ queryKey: ["coins-history"] });
     },
   });
 
   const deleteEntry = useMutation({
     mutationFn: (id: string) => CoinsHistoryAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["coins-history"]);
+      queryClient.invalidateQueries({ queryKey: ["coins-history"] });
     },
   });
 

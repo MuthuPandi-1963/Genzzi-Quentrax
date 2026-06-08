@@ -46,58 +46,58 @@ export const useAssessments = () => {
   const createAssessment = useMutation({
     mutationFn: AssessmentAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const createMany = useMutation({
     mutationFn: AssessmentAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const updateAssessment = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => AssessmentAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const deleteAssessment = useMutation({
     mutationFn: (id: string) => AssessmentAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const publish = useMutation({
     mutationFn: (id: string) => AssessmentAPI.publish(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const assign = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => AssessmentAPI.assign(id, data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries(["assessments", vars.id, "assignments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments", vars.id, "assignments"] });
     },
   });
 
   const start = useMutation({
     mutationFn: (id: string) => AssessmentAPI.start(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["assessments"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
     },
   });
 
   const submit = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => AssessmentAPI.submit(id, data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries(["assessments", vars.id, "results"]);
-      queryClient.invalidateQueries(["assessments", vars.id, "attempts"]);
-      queryClient.invalidateQueries(["coins"]);
+      queryClient.invalidateQueries({ queryKey: ["assessments", vars.id, "results"] });
+      queryClient.invalidateQueries({ queryKey: ["assessments", vars.id, "attempts"] });
+      queryClient.invalidateQueries({ queryKey: ["coins"] });
     },
   });
 

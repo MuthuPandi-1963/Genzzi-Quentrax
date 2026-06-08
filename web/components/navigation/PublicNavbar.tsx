@@ -18,16 +18,11 @@ import {
   Zap,
   Moon,
   Sun,
+  Monitor,
 } from "lucide-react";
+import { useTheme } from "@/context/ThemeContex";
 
-/* ─── Props ───────────────────────────────────────────────── */
-
-interface NavbarProps {
-  isDark: boolean;
-  toggleTheme: () => void;
-}
-
-/* ─── Nav Links ───────────────────────────────────────────── */
+/* ... same navLinks, MobileNavItem, DesktopNavLink as before ... */
 
 const navLinks = [
   { href: "/", label: "Home", icon: Sparkles },
@@ -38,8 +33,6 @@ const navLinks = [
   { href: "/about", label: "About", icon: Zap },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
 ];
-
-/* ─── Mobile Nav Item ─────────────────────────────────────── */
 
 function MobileNavItem({
   link,
@@ -78,8 +71,6 @@ function MobileNavItem({
   );
 }
 
-/* ─── Desktop Nav Link ──────────────────────────────────── */
-
 function DesktopNavLink({
   link,
   isActive,
@@ -114,13 +105,13 @@ function DesktopNavLink({
   );
 }
 
-/* ─── Main Navbar ─────────────────────────────────────────── */
-
-export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
+export default function Navbar() {
+  const { isDark, toggleTheme, mode, setMode } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
 
   const { scrollY } = useScroll();
   const navBackground = useTransform(
@@ -128,7 +119,7 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
     [0, 50],
     isDark
       ? ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]
-      : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.85)"]
+      : ["rgba(248, 247, 252, 0)", "rgba(248, 247, 252, 0.85)"]
   );
   const navBackdrop = useTransform(
     scrollY,
@@ -140,7 +131,7 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
     [0, 50],
     isDark
       ? ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"]
-      : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.08)"]
+      : ["rgba(26, 20, 41, 0)", "rgba(26, 20, 41, 0.08)"]
   );
 
   useEffect(() => {
@@ -158,6 +149,12 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
+
+  const themeIcon = {
+    dark: Moon,
+    light: Sun,
+    system: Monitor,
+  }[mode];
 
   return (
     <>
@@ -218,36 +215,63 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
                 <Search className="w-4 h-4" />
               </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 180 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleTheme}
-                className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
-              >
-                <AnimatePresence mode="wait">
-                  {isDark ? (
+              {/* Theme picker with dropdown */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowThemeMenu(!showThemeMenu)}
+                  className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
+                >
+                  <AnimatePresence mode="wait">
                     <motion.div
-                      key="moon"
+                      key={mode}
                       initial={{ rotate: -90, opacity: 0 }}
                       animate={{ rotate: 0, opacity: 1 }}
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Moon className="w-4 h-4" />
+                      {mode === "dark" && <Moon className="w-4 h-4" />}
+                      {mode === "light" && <Sun className="w-4 h-4" />}
+                      {mode === "system" && <Monitor className="w-4 h-4" />}
                     </motion.div>
-                  ) : (
+                  </AnimatePresence>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showThemeMenu && (
                     <motion.div
-                      key="sun"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-12 w-40 bg-[var(--color-background-elevated)] border border-[var(--color-border)] rounded-xl shadow-xl p-1 z-50"
                     >
-                      <Sun className="w-4 h-4" />
+                      {([
+                        { value: "light" as const, label: "Light", icon: Sun },
+                        { value: "dark" as const, label: "Dark", icon: Moon },
+                        { value: "system" as const, label: "System", icon: Monitor },
+                      ]).map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setMode(option.value);
+                            setShowThemeMenu(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            mode === option.value
+                              ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                              : "text-[var(--color-foreground-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+                          }`}
+                        >
+                          <option.icon className="w-4 h-4" />
+                          {option.label}
+                        </button>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </div>
 
               <div className="w-px h-6 bg-[var(--color-border)]" />
 

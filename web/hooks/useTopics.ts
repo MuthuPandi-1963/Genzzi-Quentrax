@@ -30,21 +30,21 @@ export const useTopics = () => {
   const createTopic = useMutation({
     mutationFn: TopicAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(["topics"]);
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
     },
   });
 
   const updateTopic = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => TopicAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["topics"]);
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
     },
   });
 
   const deleteTopic = useMutation({
     mutationFn: (id: string) => TopicAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["topics"]);
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
     },
   });
 

@@ -22,21 +22,21 @@ export const useCategories = () => {
   const createCategory = useMutation({
     mutationFn: CategoryAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(["categories"]);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
 
   const updateCategory = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => CategoryAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["categories"]);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
 
   const deleteCategory = useMutation({
     mutationFn: (id: string) => CategoryAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(["categories"]);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
 

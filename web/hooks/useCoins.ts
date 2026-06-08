@@ -21,8 +21,8 @@ export const useCoins = () => {
   const adjust = useMutation({
     mutationFn: CoinsAPI.adjust,
     onSuccess: () => {
-      queryClient.invalidateQueries(["coins"]);
-      queryClient.invalidateQueries(["coins", "history"]);
+      queryClient.invalidateQueries({ queryKey: ["coins"] });
+      queryClient.invalidateQueries({ queryKey: ["coins", "history"] });
     },
   });
 
