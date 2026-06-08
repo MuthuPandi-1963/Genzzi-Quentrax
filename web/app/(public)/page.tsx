@@ -249,7 +249,7 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
 
 /* ─── Main component ────────────────────────────────────────── */
 
-
+export default function LandingPage() {
 const [theme, setTheme] = useState<"dark" | "light">("light");
   const [currentTagline, setCurrentTagline] = useState(0);
 

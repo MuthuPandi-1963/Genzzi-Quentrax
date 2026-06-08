@@ -4,13 +4,31 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
-  Menu, X, Sparkles, BookOpen, Trophy, Grid3X3, Layers,
-  HelpCircle, LogIn, UserPlus, Search,Zap
+  Menu,
+  X,
+  Sparkles,
+  BookOpen,
+  Trophy,
+  Grid3X3,
+  Layers,
+  HelpCircle,
+  LogIn,
+  UserPlus,
+  Search,
+  Zap,
+  Moon,
+  Sun,
 } from "lucide-react";
 
-// ═══════════════════════════════════════════════════════════════
-//  NAV LINKS
-// ═══════════════════════════════════════════════════════════════
+/* ─── Props ───────────────────────────────────────────────── */
+
+interface NavbarProps {
+  isDark: boolean;
+  toggleTheme: () => void;
+}
+
+/* ─── Nav Links ───────────────────────────────────────────── */
+
 const navLinks = [
   { href: "/", label: "Home", icon: Sparkles },
   { href: "/categories", label: "Categories", icon: Grid3X3 },
@@ -21,13 +39,15 @@ const navLinks = [
   { href: "/faq", label: "FAQ", icon: HelpCircle },
 ];
 
-// ═══════════════════════════════════════════════════════════════
-//  MOBILE NAV ITEM
-// ═══════════════════════════════════════════════════════════════
+/* ─── Mobile Nav Item ─────────────────────────────────────── */
+
 function MobileNavItem({
-  link, isActive, onClick, index,
+  link,
+  isActive,
+  onClick,
+  index,
 }: {
-  link: typeof navLinks[0];
+  link: (typeof navLinks)[0];
   isActive: boolean;
   onClick: () => void;
   index: number;
@@ -58,10 +78,15 @@ function MobileNavItem({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  DESKTOP NAV LINK
-// ═══════════════════════════════════════════════════════════════
-function DesktopNavLink({ link, isActive }: { link: typeof navLinks[0]; isActive: boolean }) {
+/* ─── Desktop Nav Link ──────────────────────────────────── */
+
+function DesktopNavLink({
+  link,
+  isActive,
+}: {
+  link: (typeof navLinks)[0];
+  isActive: boolean;
+}) {
   const router = useRouter();
   const Icon = link.icon;
 
@@ -89,19 +114,34 @@ function DesktopNavLink({ link, isActive }: { link: typeof navLinks[0]; isActive
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  MAIN PUBLIC NAVBAR
-// ═══════════════════════════════════════════════════════════════
-export default function PublicNavbar() {
+/* ─── Main Navbar ─────────────────────────────────────────── */
+
+export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const { scrollY } = useScroll();
-  const navBackground = useTransform(scrollY, [0, 50], ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]);
-  const navBackdrop = useTransform(scrollY, [0, 50], ["blur(0px)", "blur(20px) saturate(1.2)"]);
-  const navBorder = useTransform(scrollY, [0, 50], ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"]);
+  const navBackground = useTransform(
+    scrollY,
+    [0, 50],
+    isDark
+      ? ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]
+      : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.85)"]
+  );
+  const navBackdrop = useTransform(
+    scrollY,
+    [0, 50],
+    ["blur(0px)", "blur(20px) saturate(1.2)"]
+  );
+  const navBorder = useTransform(
+    scrollY,
+    [0, 50],
+    isDark
+      ? ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"]
+      : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.08)"]
+  );
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -109,7 +149,9 @@ export default function PublicNavbar() {
 
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isMobileMenuOpen]);
 
   const isActive = (href: string) => {
@@ -125,11 +167,11 @@ export default function PublicNavbar() {
           backdropFilter: navBackdrop,
           borderBottomColor: navBorder,
         }}
-        className="fixed top-0 left-0 right-0 z-[var(--z-index-fixed)] border-b"
+        className="fixed top-0 left-0 right-0 z-50 border-b"
       >
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16 md:h-[4.5rem]">
-            {/* ─── Logo ────────────────────────────────────────── */}
+            {/* Logo */}
             <motion.div
               className="flex items-center gap-2.5 cursor-pointer"
               onClick={() => router.push("/")}
@@ -154,14 +196,18 @@ export default function PublicNavbar() {
               </div>
             </motion.div>
 
-            {/* ─── Desktop Nav ─────────────────────────────────── */}
+            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
-                <DesktopNavLink key={link.href} link={link} isActive={isActive(link.href)} />
+                <DesktopNavLink
+                  key={link.href}
+                  link={link}
+                  isActive={isActive(link.href)}
+                />
               ))}
             </nav>
 
-            {/* ─── Desktop Actions ─────────────────────────────── */}
+            {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -170,6 +216,37 @@ export default function PublicNavbar() {
                 className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
               >
                 <Search className="w-4 h-4" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 180 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={toggleTheme}
+                className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
+              >
+                <AnimatePresence mode="wait">
+                  {isDark ? (
+                    <motion.div
+                      key="moon"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Moon className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="sun"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sun className="w-4 h-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.button>
 
               <div className="w-px h-6 bg-[var(--color-border)]" />
@@ -195,7 +272,7 @@ export default function PublicNavbar() {
               </motion.button>
             </div>
 
-            {/* ─── Mobile Actions ──────────────────────────────── */}
+            {/* Mobile Actions */}
             <div className="flex lg:hidden items-center gap-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -214,11 +291,23 @@ export default function PublicNavbar() {
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
-                    <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <X className="w-5 h-5" />
                     </motion.div>
                   ) : (
-                    <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <Menu className="w-5 h-5" />
                     </motion.div>
                   )}
@@ -228,7 +317,7 @@ export default function PublicNavbar() {
           </div>
         </div>
 
-        {/* ─── Search Bar (Expandable) ─────────────────────── */}
+        {/* Search Bar */}
         <AnimatePresence>
           {isSearchOpen && (
             <motion.div
@@ -238,7 +327,7 @@ export default function PublicNavbar() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="overflow-hidden border-t border-[var(--color-border)]/50"
             >
-              <div className="container mx-auto px-4 py-4">
+              <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="relative max-w-2xl mx-auto">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-foreground-subtle)]" />
                   <input
@@ -248,7 +337,11 @@ export default function PublicNavbar() {
                     className="glass-input pl-12 pr-4 py-3 w-full text-base"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        router.push(`/quizzes?search=${encodeURIComponent((e.target as HTMLInputElement).value)}`);
+                        router.push(
+                          `/quizzes?search=${encodeURIComponent(
+                            (e.target as HTMLInputElement).value
+                          )}`
+                        );
                         setIsSearchOpen(false);
                       }
                     }}
@@ -260,7 +353,7 @@ export default function PublicNavbar() {
         </AnimatePresence>
       </motion.header>
 
-      {/* ═══ Mobile Menu Overlay ═══════════════════════════════ */}
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -269,7 +362,7 @@ export default function PublicNavbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-[var(--color-background)]/80 backdrop-blur-xl z-[var(--z-index-modal-backdrop)] lg:hidden"
+              className="fixed inset-0 bg-[var(--color-background)]/80 backdrop-blur-xl z-40 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -278,7 +371,7 @@ export default function PublicNavbar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.5 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-[var(--color-background-elevated)] border-l border-[var(--color-border)] z-[var(--z-index-modal)] lg:hidden flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-[var(--color-background-elevated)] border-l border-[var(--color-border)] z-50 lg:hidden flex flex-col"
             >
               {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
@@ -286,7 +379,9 @@ export default function PublicNavbar() {
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-bold text-[var(--color-foreground)]">Menu</span>
+                  <span className="font-bold text-[var(--color-foreground)]">
+                    Menu
+                  </span>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
