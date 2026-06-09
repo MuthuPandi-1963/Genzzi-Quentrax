@@ -1,16 +1,17 @@
 "use client"
 import { QueryProvider } from "@/providers/query-client.provider";
 import "./globals.css"
-import { ThemeProvider } from "@/context/ThemeContex";
+import { ThemeProvider } from "@/components/theme-provider";
 export default function Rootlayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <QueryProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-
+          <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+          </ThemeProvider>
         </QueryProvider>
-        </body>
+      </body>
     </html>
   );
 }

@@ -20,7 +20,7 @@ import {
   Sun,
   Monitor,
 } from "lucide-react";
-import { useTheme } from "@/context/ThemeContex";
+import { useTheme } from "next-themes";
 
 /* ... same navLinks, MobileNavItem, DesktopNavLink as before ... */
 
@@ -106,7 +106,10 @@ function DesktopNavLink({
 }
 
 export default function Navbar() {
-  const { isDark, toggleTheme, mode, setMode } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const mode = (theme as "dark" | "light" | "system") || "system";
+  const setMode = setTheme;
+  const isDark = resolvedTheme === "dark";
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
