@@ -5,6 +5,7 @@ import PublicNavbar from "@/components/navigation/PublicNavbar";
 import PublicFooter from "@/components/footer/PubicFooter";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useTheme } from "next-themes";
 import {
   Shield,
   Lock,
@@ -250,7 +251,7 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
 /* ─── Main component ────────────────────────────────────────── */
 
 export default function LandingPage() {
-const [theme, setTheme] = useState<"dark" | "light">("light");
+  const { resolvedTheme } = useTheme();
   const [currentTagline, setCurrentTagline] = useState(0);
 
   const { scrollYProgress } = useScroll();
@@ -266,8 +267,7 @@ const [theme, setTheme] = useState<"dark" | "light">("light");
     return () => clearInterval(interval);
   }, []);
 
-  const toggleTheme = () => setTheme((p) => (p === "dark" ? "light" : "dark"));
-  const isDark = theme === "dark";
+  const isDark = resolvedTheme === "dark";
 
   const bgImage = isDark
     ? `radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),

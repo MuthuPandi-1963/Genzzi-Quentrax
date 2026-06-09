@@ -1,6 +1,5 @@
 @import 'tailwindcss';
-
-/* ═══════════════════════════════════════════════════════════════
+@custom-variant dark (&:where(.dark, .dark *));/* ═══════════════════════════════════════════════════════════════
    QUIZ APP — TAILWIND V4 GLOBAL THEME
    Color Theory: Deep Purple Space + Neon Accents + Glassmorphism
    ═══════════════════════════════════════════════════════════════ */
@@ -805,10 +804,7 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   THEME OVERRIDES (High Specificity)
-   ═══════════════════════════════════════════════════════════════ */
-:root, [data-theme="light"] {
+html, html.light, :root {
   --color-background: #f8f7fc;
   --color-background-elevated: #ffffff;
   --color-foreground: #1a1429;
@@ -820,7 +816,7 @@
   --color-accent: #c026d3;
 }
 
-[data-theme="dark"] {
+html.dark {
   --color-background: #110c1c;
   --color-background-elevated: #1a1429;
   --color-foreground: #ffffff;

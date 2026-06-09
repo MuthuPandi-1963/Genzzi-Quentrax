@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "next-themes";
 import {
   Eye,
   EyeOff,
@@ -24,7 +25,7 @@ import SiteLogo from "../../../components/SiteLogo"; // ← FIX: replaced `impor
                                                 //         with the SiteLogo component used everywhere else in the project
 
 export default function LoginPage() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const { resolvedTheme, setTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,8 +38,8 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState("");
   const [shake, setShake] = useState(false);
 
-  const isDark = theme === "dark";
-  const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  const isDark = resolvedTheme === "dark";
+  const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   const particles = useMemo(() => {
     const rand = (n: number) => {
