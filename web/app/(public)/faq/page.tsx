@@ -141,7 +141,7 @@ const HelpCard = ({ title, description, icon: Icon, buttonText, link }: {
   link: string;
 }) => (
   <motion.div
-    variants={fadeIn}
+    // variants={fadeIn}
     whileHover={{ y: -5 }}
     className="bg-card rounded-2xl p-6 text-center border border-border hover:border-primary/30 transition-all duration-300"
   >
@@ -165,7 +165,7 @@ const HelpCard = ({ title, description, icon: Icon, buttonText, link }: {
 // Quick Stat Card
 const QuickStat = ({ value, label, icon: Icon }: { value: string; label: string; icon: React.ElementType }) => (
   <motion.div
-    variants={fadeIn}
+    // variants={fadeIn}
     whileHover={{ scale: 1.05 }}
     className="text-center"
   >
