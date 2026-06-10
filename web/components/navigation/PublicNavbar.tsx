@@ -146,7 +146,9 @@ export default function Navbar() {
   );
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    (async()=>{
+      setIsMobileMenuOpen(false)
+    })();
   }, [pathname]);
 
   useEffect(() => {

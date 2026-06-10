@@ -25,6 +25,8 @@ import {
   TrendingUp,
   Target,
 } from "lucide-react";
+import { ParticleField } from "@/components/custom/ParticleField";
+import { useTheme } from "next-themes";
 
 const heroTaglines = [
   "Think Beyond Answers.",
@@ -35,10 +37,10 @@ const heroTaglines = [
 ];
 
 const stats = [
-  { icon: Users,  value: 10000, suffix: "+", label: "Active Learners" },
+  { icon: Users, value: 10000, suffix: "+", label: "Active Learners" },
   { icon: Trophy, value: 50000, suffix: "+", label: "Quizzes Taken" },
-  { icon: Brain,  value: 1,     suffix: "M+", label: "Questions Answered" },
-  { icon: Star,   value: 4.9,   suffix: "",   label: "Average Rating" },
+  { icon: Brain, value: 1, suffix: "M+", label: "Questions Answered" },
+  { icon: Star, value: 4.9, suffix: "", label: "Average Rating" },
 ];
 
 const features = [
@@ -70,25 +72,25 @@ const features = [
 
 const techStack = [
   { label: "OAuth 2.1", icon: Globe },
-  { label: "PKCE",      icon: Code2 },
+  { label: "PKCE", icon: Code2 },
   { label: "E2E Encrypted", icon: Lock },
 ];
 
 const trustBadges = ["A", "B", "C", "D"];
 
 const categories = [
-  { name: "Science",    icon: "🔬", color: "badge-science",   count: 120 },
-  { name: "Technology", icon: "💻", color: "badge-tech",      count: 85 },
-  { name: "History",    icon: "📜", color: "badge-history",   count: 64 },
-  { name: "Geography",  icon: "🌍", color: "badge-geography", count: 92 },
-  { name: "Arts",       icon: "🎨", color: "badge-arts",      count: 45 },
-  { name: "Sports",     icon: "⚽", color: "badge-sports",    count: 78 },
+  { name: "Science", icon: "🔬", color: "badge-science", count: 120 },
+  { name: "Technology", icon: "💻", color: "badge-tech", count: 85 },
+  { name: "History", icon: "📜", color: "badge-history", count: 64 },
+  { name: "Geography", icon: "🌍", color: "badge-geography", count: 92 },
+  { name: "Arts", icon: "🎨", color: "badge-arts", count: 45 },
+  { name: "Sports", icon: "⚽", color: "badge-sports", count: 78 },
 ];
 
 const howItWorks = [
-  { step: "01", title: "Browse",  desc: "Explore thousands of quizzes across every topic imaginable.", icon: Globe },
+  { step: "01", title: "Browse", desc: "Explore thousands of quizzes across every topic imaginable.", icon: Globe },
   { step: "02", title: "Compete", desc: "Test your knowledge against timed challenges and leaderboards.", icon: Target },
-  { step: "03", title: "Earn",    desc: "Collect coins, climb ranks, and unlock achievements.", icon: Award },
+  { step: "03", title: "Earn", desc: "Collect coins, climb ranks, and unlock achievements.", icon: Award },
 ];
 
 const testimonials = [
@@ -256,8 +258,8 @@ export default function LandingPage() {
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
-  const heroScale  = useTransform(scrollYProgress, [0, 0.12], [1, 0.92]);
-  const heroY      = useTransform(scrollYProgress, [0, 0.12], [0, -60]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.12], [1, 0.92]);
+  const heroY = useTransform(scrollYProgress, [0, 0.12], [0, -60]);
 
   useEffect(() => {
     const interval = setInterval(
@@ -278,15 +280,14 @@ export default function LandingPage() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-700 ${
-        isDark
+      className={`min-h-screen transition-colors duration-700 ${isDark
           ? "bg-[hsl(260,50%,4%)] text-white"
           : "bg-[hsl(260,20%,96%)] text-[hsl(260,50%,10%)]"
-      }`}
+        }`}
       style={{ backgroundImage: bgImage, backgroundAttachment: "fixed" }}
     >
       <CursorOrb isDark={isDark} />
-    
+
 
       {/* ══ HERO ════════════════════════════════════════════════ */}
       <motion.section
@@ -305,40 +306,7 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {Array.from({ length: 24 }).map((_, i) => {
-            const left   = `${seededRand(i + 1) * 100}%`;
-            const top    = `${seededRand(i + 101) * 100}%`;
-            const size   = seededRand(i + 201) * 4 + 2;
-            const dur    = seededRand(i + 301) * 8 + 6;
-            const delay  = seededRand(i + 401) * 4;
-            const xOff   = seededRand(i + 501) * 30 - 15;
-            const isGold = i % 5 === 0;
-
-            return (
-              <motion.div
-                key={i}
-                className="absolute rounded-full"
-                style={{
-                  width: size,
-                  height: size,
-                  left,
-                  top,
-                  background: isGold
-                    ? "hsl(45 95% 55%)"
-                    : "hsl(263 70% 58%)",
-                }}
-                animate={{
-                  y: [0, -40, 0],
-                  x: [0, xOff, 0],
-                  opacity: [0, 0.7, 0],
-                  scale: [0.5, 1.2, 0.5],
-                }}
-                transition={{ duration: dur, repeat: Infinity, delay, ease: "easeInOut" }}
-              />
-            );
-          })}
-        </div>
+        <ParticleField/>
 
         <motion.div
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
@@ -353,11 +321,10 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
           <motion.div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-8 ${
-              isDark
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-8 ${isDark
                 ? "bg-white/10 border border-white/20 text-white/90"
                 : "bg-black/5 border border-black/10 text-gray-700"
-            }`}
+              }`}
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
@@ -413,9 +380,8 @@ export default function LandingPage() {
             <AnimatePresence mode="wait">
               <motion.p
                 key={currentTagline}
-                className={`text-2xl md:text-4xl font-light tracking-wide ${
-                  isDark ? "text-white/80" : "text-gray-600"
-                }`}
+                className={`text-2xl md:text-4xl font-light tracking-wide ${isDark ? "text-white/80" : "text-gray-600"
+                  }`}
                 initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -30, filter: "blur(12px)" }}
@@ -465,11 +431,10 @@ export default function LandingPage() {
             </motion.a>
             <motion.a
               href="/quizzes"
-              className={`px-8 py-4 rounded-2xl text-lg font-bold flex items-center gap-2 border transition-all ${
-                isDark
+              className={`px-8 py-4 rounded-2xl text-lg font-bold flex items-center gap-2 border transition-all ${isDark
                   ? "border-white/20 text-white hover:bg-white/10"
                   : "border-black/10 text-gray-800 hover:bg-black/5"
-              }`}
+                }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -479,11 +444,10 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.div
-            className={`grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto ${
-              isDark
+            className={`grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto ${isDark
                 ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10"
                 : "bg-white/60 backdrop-blur-xl rounded-3xl border border-black/5 shadow-xl"
-            } p-6`}
+              } p-6`}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0, type: "spring" }}
@@ -528,9 +492,8 @@ export default function LandingPage() {
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           >
             <div
-              className={`w-6 h-10 rounded-full border-2 flex justify-center pt-2 ${
-                isDark ? "border-white/30" : "border-gray-400"
-              }`}
+              className={`w-6 h-10 rounded-full border-2 flex justify-center pt-2 ${isDark ? "border-white/30" : "border-gray-400"
+                }`}
             >
               <motion.div
                 className={`w-1.5 h-1.5 rounded-full ${isDark ? "bg-white/60" : "bg-gray-500"}`}
@@ -565,11 +528,10 @@ export default function LandingPage() {
             {howItWorks.map((item, i) => (
               <SpotlightCard
                 key={item.step}
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-xl"
-                } p-8 relative overflow-hidden group`}
+                  } p-8 relative overflow-hidden group`}
               >
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
@@ -587,9 +549,8 @@ export default function LandingPage() {
                   </motion.div>
 
                   <motion.div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${
-                      isDark ? "bg-white/10" : "bg-[hsl(263,70%,58%)]/10"
-                    }`}
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${isDark ? "bg-white/10" : "bg-[hsl(263,70%,58%)]/10"
+                      }`}
                     whileHover={{ rotate: 12, scale: 1.15 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -626,11 +587,10 @@ export default function LandingPage() {
               <motion.a
                 key={cat.name}
                 href={`/categories/${cat.name.toLowerCase()}`}
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 hover:border-[hsl(263,70%,58%)]/40"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-lg hover:border-[hsl(263,70%,58%)]/30"
-                } p-6 flex items-center gap-4 group cursor-pointer transition-colors`}
+                  } p-6 flex items-center gap-4 group cursor-pointer transition-colors`}
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
@@ -692,9 +652,8 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <motion.div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-6 ${
-                isDark ? "bg-white/10 border border-white/20" : "bg-black/5 border border-black/10"
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-6 ${isDark ? "bg-white/10 border border-white/20" : "bg-black/5 border border-black/10"
+                }`}
               whileHover={{ scale: 1.05 }}
             >
               <motion.div
@@ -718,11 +677,10 @@ export default function LandingPage() {
             {features.map((feature, i) => (
               <SpotlightCard
                 key={feature.title}
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-lg"
-                } p-8 flex items-start gap-5`}
+                  } p-8 flex items-start gap-5`}
               >
                 <motion.div
                   initial={{ opacity: 0, x: i % 2 === 0 ? -40 : 40 }}
@@ -748,11 +706,10 @@ export default function LandingPage() {
           </div>
 
           <motion.div
-            className={`${
-              isDark
+            className={`${isDark
                 ? "bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10"
                 : "bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-black/5 shadow-xl"
-            } p-8 md:p-12 mb-16`}
+              } p-8 md:p-12 mb-16`}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -764,7 +721,7 @@ export default function LandingPage() {
                   <span className="text-gradient">Why Genzzi powers Quentrax</span>
                 </h3>
                 <p className={`text-lg mb-6 ${isDark ? "text-white/70" : "text-gray-600"}`}>
-                  Traditional logins store your password on our servers. Genzzi doesn't. Your
+                  Traditional logins store your password on our servers. Genzzi doesn&lsquo;t. Your
                   identity is verified cryptographically — we never see your secrets. One Genzzi
                   account works across all ecosystem apps.
                 </p>
@@ -772,9 +729,8 @@ export default function LandingPage() {
                   {techStack.map((tech, i) => (
                     <motion.span
                       key={tech.label}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${
-                        isDark ? "bg-white/10 text-white" : "bg-black/5 text-gray-700"
-                      }`}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-gray-700"
+                        }`}
                       initial={{ opacity: 0, scale: 0.8 }}
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
@@ -791,11 +747,10 @@ export default function LandingPage() {
                 {trustBadges.map((badge, i) => (
                   <motion.div
                     key={badge}
-                    className={`${
-                      isDark
+                    className={`${isDark
                         ? "bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10"
                         : "bg-white/60 backdrop-blur-xl rounded-2xl border border-black/5"
-                    } p-6 text-center`}
+                      } p-6 text-center`}
                     initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
                     whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
                     viewport={{ once: true }}
@@ -853,20 +808,19 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain,     title: "Smart Quizzes",      desc: "Adaptive difficulty that grows with your knowledge." },
-              { icon: Trophy,    title: "Leaderboards",        desc: "Compete globally and climb the ranks in real-time." },
-              { icon: Zap,       title: "Live Assessments",    desc: "Timed proctored exams with anti-cheat detection." },
-              { icon: Award,     title: "Gamified Learning",   desc: "Earn coins, unlock badges, and level up." },
-              { icon: TrendingUp,title: "Progress Tracking",   desc: "Detailed analytics on your learning journey." },
-              { icon: Target,    title: "Custom Assessments",  desc: "Create and assign quizzes to your students." },
+              { icon: Brain, title: "Smart Quizzes", desc: "Adaptive difficulty that grows with your knowledge." },
+              { icon: Trophy, title: "Leaderboards", desc: "Compete globally and climb the ranks in real-time." },
+              { icon: Zap, title: "Live Assessments", desc: "Timed proctored exams with anti-cheat detection." },
+              { icon: Award, title: "Gamified Learning", desc: "Earn coins, unlock badges, and level up." },
+              { icon: TrendingUp, title: "Progress Tracking", desc: "Detailed analytics on your learning journey." },
+              { icon: Target, title: "Custom Assessments", desc: "Create and assign quizzes to your students." },
             ].map((feature, i) => (
               <SpotlightCard
                 key={feature.title}
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 hover:border-[hsl(263,70%,58%)]/30"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-lg"
-                } p-8 transition-colors`}
+                  } p-8 transition-colors`}
               >
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
@@ -876,9 +830,8 @@ export default function LandingPage() {
                   whileHover={{ y: -6 }}
                 >
                   <motion.div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${
-                      isDark ? "bg-white/10" : "bg-[hsl(263,70%,58%)]/10"
-                    }`}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${isDark ? "bg-white/10" : "bg-[hsl(263,70%,58%)]/10"
+                      }`}
                     whileHover={{ scale: 1.2, rotate: 12 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -916,11 +869,10 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <motion.div
                 key={t.name}
-                className={`${
-                  isDark
+                className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-lg"
-                } p-8 relative`}
+                  } p-8 relative`}
                 initial={{ opacity: 0, y: 40, rotateY: -15 }}
                 whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
                 viewport={{ once: true }}
@@ -966,11 +918,10 @@ export default function LandingPage() {
       {/* ══ CTA ═════════════════════════════════════════════════ */}
       <section className="py-24 px-6">
         <motion.div
-          className={`max-w-4xl mx-auto text-center ${
-            isDark
+          className={`max-w-4xl mx-auto text-center ${isDark
               ? "bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10"
               : "bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-black/5 shadow-xl"
-          } p-12 md:p-16 relative overflow-hidden`}
+            } p-12 md:p-16 relative overflow-hidden`}
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
@@ -978,9 +929,8 @@ export default function LandingPage() {
         >
           <div className="absolute inset-0 pointer-events-none">
             <motion.div
-              className={`absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full ${
-                isDark ? "bg-purple-500/20" : "bg-purple-500/10"
-              } blur-3xl`}
+              className={`absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full ${isDark ? "bg-purple-500/20" : "bg-purple-500/10"
+                } blur-3xl`}
               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.9, 0.5] }}
               transition={{ duration: 6, repeat: Infinity }}
             />
@@ -1020,11 +970,10 @@ export default function LandingPage() {
               </motion.a>
               <motion.a
                 href="/quizzes"
-                className={`px-10 py-4 rounded-2xl text-lg font-bold border transition-all ${
-                  isDark
+                className={`px-10 py-4 rounded-2xl text-lg font-bold border transition-all ${isDark
                     ? "border-white/20 text-white hover:bg-white/10"
                     : "border-black/10 text-gray-800 hover:bg-black/5"
-                }`}
+                  }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1035,7 +984,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-     
+
     </div>
   );
 }

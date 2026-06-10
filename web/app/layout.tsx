@@ -1,4 +1,4 @@
-"use client"
+// app/layout.tsx  ← ThemeProvider goes HERE, not in (public)/layout.tsx
 import { QueryProvider } from "@/providers/query-client.provider";
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider";
