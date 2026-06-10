@@ -19,10 +19,12 @@ export type DifficultyString = 'easy' | 'medium' | 'hard';
 
 export enum QuestionType {
   MCQ = 'MCQ',
-  TRUE_FALSE = 'TRUE_FALSE',
   FILL_BLANK = 'FILL_BLANK',
+  TRUE_FALSE = 'TRUE_FALSE',
+  DESCRIPTION = 'DESCRIPTION',
+  CODE = 'CODE',
 }
-export type QuestionTypeString = 'MCQ' | 'TRUE_FALSE' | 'FILL_BLANK';
+export type QuestionTypeString = 'MCQ' | 'FILL_BLANK' | 'TRUE_FALSE' | 'DESCRIPTION' | 'CODE';
 
 export enum QuestionStatus {
   active = 'active',
