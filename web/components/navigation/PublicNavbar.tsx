@@ -7,31 +7,22 @@ import {
   Menu,
   X,
   Sparkles,
-  BookOpen,
-  Trophy,
-  Grid3X3,
-  Layers,
-  HelpCircle,
   LogIn,
   UserPlus,
-  Search,
-  Zap,
   Moon,
   Sun,
   Monitor,
+  Home,
+  Info,
+  Mail,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-/* ... same navLinks, MobileNavItem, DesktopNavLink as before ... */
-
 const navLinks = [
-  { href: "/", label: "Home", icon: Sparkles },
-  { href: "/categories", label: "Categories", icon: Grid3X3 },
-  { href: "/topics", label: "Topics", icon: Layers },
-  { href: "/quizzes", label: "Quizzes", icon: BookOpen },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/about", label: "About", icon: Zap },
-  { href: "/faq", label: "FAQ", icon: HelpCircle },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/about", label: "About", icon: Info },
+  { href: "/contact", label: "Contact", icon: Mail },
+  
 ];
 
 function MobileNavItem({
@@ -39,11 +30,13 @@ function MobileNavItem({
   isActive,
   onClick,
   index,
+  isDark,
 }: {
   link: (typeof navLinks)[0];
   isActive: boolean;
   onClick: () => void;
   index: number;
+  isDark: boolean;
 }) {
   const Icon = link.icon;
   return (
@@ -55,8 +48,10 @@ function MobileNavItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
         isActive
-          ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20"
-          : "text-[var(--color-foreground-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+          ? "bg-[hsl(263,70%,58%)]/10 text-[hsl(263,70%,58%)] border border-[hsl(263,70%,58%)]/20"
+          : isDark
+          ? "text-white/60 hover:bg-white/5 hover:text-white"
+          : "text-gray-500 hover:bg-black/5 hover:text-gray-900"
       }`}
     >
       <Icon className="w-5 h-5" />
@@ -64,7 +59,7 @@ function MobileNavItem({
       {isActive && (
         <motion.div
           layoutId="mobileActiveIndicator"
-          className="ml-auto w-2 h-2 rounded-full bg-[var(--color-primary)]"
+          className="ml-auto w-2 h-2 rounded-full bg-[hsl(263,70%,58%)]"
         />
       )}
     </motion.button>
@@ -74,9 +69,11 @@ function MobileNavItem({
 function DesktopNavLink({
   link,
   isActive,
+  isDark,
 }: {
   link: (typeof navLinks)[0];
   isActive: boolean;
+  isDark: boolean;
 }) {
   const router = useRouter();
   const Icon = link.icon;
@@ -86,8 +83,10 @@ function DesktopNavLink({
       onClick={() => router.push(link.href)}
       className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
         isActive
-          ? "text-[var(--color-primary)]"
-          : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
+          ? "text-[hsl(263,70%,58%)]"
+          : isDark
+          ? "text-white/60 hover:text-white"
+          : "text-gray-500 hover:text-gray-900"
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -97,7 +96,7 @@ function DesktopNavLink({
       {isActive && (
         <motion.div
           layoutId="desktopActiveIndicator"
-          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] rounded-full"
+          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-[hsl(263,70%,58%)] to-[hsl(330,80%,55%)] rounded-full"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
       )}
@@ -105,15 +104,15 @@ function DesktopNavLink({
   );
 }
 
-export default function Navbar() {
+export default function PublicNavbar() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const mode = (theme as "dark" | "light" | "system") || "system";
   const setMode = setTheme;
   const isDark = resolvedTheme === "dark";
+
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
 
   const { scrollY } = useScroll();
@@ -153,12 +152,6 @@ export default function Navbar() {
     return pathname.startsWith(href);
   };
 
-  const themeIcon = {
-    dark: Moon,
-    light: Sun,
-    system: Monitor,
-  }[mode];
-
   return (
     <>
       <motion.header
@@ -178,10 +171,10 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-lg shadow-[var(--color-primary)]/20">
+              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(263,70%,58%)] to-[hsl(330,80%,55%)] flex items-center justify-center shadow-lg shadow-[hsl(263,70%,58%)]/20">
                 <Sparkles className="w-5 h-5 text-white relative z-10" />
                 <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)]"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[hsl(263,70%,58%)] to-[hsl(330,80%,55%)]"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -197,28 +190,20 @@ export default function Navbar() {
             </motion.div>
 
             {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
                 <DesktopNavLink
                   key={link.href}
                   link={link}
                   isActive={isActive(link.href)}
+                  isDark={isDark}
                 />
               ))}
             </nav>
 
             {/* Desktop Actions */}
-            <div className="hidden lg:flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="w-9 h-9 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors"
-              >
-                <Search className="w-4 h-4" />
-              </motion.button>
-
-              {/* Theme picker with dropdown */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Theme picker */}
               <div className="relative">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -263,7 +248,7 @@ export default function Navbar() {
                           }}
                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                             mode === option.value
-                              ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                              ? "bg-[hsl(263,70%,58%)]/10 text-[hsl(263,70%,58%)]"
                               : "text-[var(--color-foreground-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
                           }`}
                         >
@@ -278,16 +263,22 @@ export default function Navbar() {
 
               <div className="w-px h-6 bg-[var(--color-border)]" />
 
+              {/* Login Button */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => router.push("/login")}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors flex items-center gap-1.5"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  isDark
+                    ? "text-white/60 hover:text-white"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
               >
                 <LogIn className="w-4 h-4" />
                 Login
               </motion.button>
 
+              {/* Register Button */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
@@ -295,21 +286,12 @@ export default function Navbar() {
                 className="gradient-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5"
               >
                 <UserPlus className="w-4 h-4" />
-                Get Started
+                Register
               </motion.button>
             </div>
 
-            {/* Mobile Actions */}
-            <div className="flex lg:hidden items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/login")}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] border border-[var(--color-border)]"
-              >
-                Login
-              </motion.button>
-
+            {/* Mobile Menu Button */}
+            <div className="flex md:hidden items-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -343,41 +325,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-
-        {/* Search Bar */}
-        <AnimatePresence>
-          {isSearchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden border-t border-[var(--color-border)]/50"
-            >
-              <div className="max-w-7xl mx-auto px-6 py-4">
-                <div className="relative max-w-2xl mx-auto">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-foreground-subtle)]" />
-                  <input
-                    type="text"
-                    placeholder="Search quizzes, topics, categories..."
-                    autoFocus
-                    className="glass-input pl-12 pr-4 py-3 w-full text-base"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        router.push(
-                          `/quizzes?search=${encodeURIComponent(
-                            (e.target as HTMLInputElement).value
-                          )}`
-                        );
-                        setIsSearchOpen(false);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.header>
 
       {/* Mobile Menu Overlay */}
@@ -389,7 +336,7 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-[var(--color-background)]/80 backdrop-blur-xl z-40 lg:hidden"
+              className="fixed inset-0 bg-[var(--color-background)]/80 backdrop-blur-xl z-40 md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -398,17 +345,15 @@ export default function Navbar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.5 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-[var(--color-background-elevated)] border-l border-[var(--color-border)] z-50 lg:hidden flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-[var(--color-background-elevated)] border-l border-[var(--color-border)] z-50 md:hidden flex flex-col"
             >
               {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(263,70%,58%)] to-[hsl(330,80%,55%)] flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-bold text-[var(--color-foreground)]">
-                    Menu
-                  </span>
+                  <span className="font-bold text-[var(--color-foreground)]">Menu</span>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
@@ -422,26 +367,49 @@ export default function Navbar() {
 
               {/* Menu Links */}
               <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                <AnimatePresence>
-                  {navLinks.map((link, i) => (
-                    <MobileNavItem
-                      key={link.href}
-                      link={link}
-                      isActive={isActive(link.href)}
-                      onClick={() => router.push(link.href)}
-                      index={i}
-                    />
-                  ))}
-                </AnimatePresence>
+                {navLinks.map((link, i) => (
+                  <MobileNavItem
+                    key={link.href}
+                    link={link}
+                    isActive={isActive(link.href)}
+                    onClick={() => router.push(link.href)}
+                    index={i}
+                    isDark={isDark}
+                  />
+                ))}
               </div>
 
               {/* Menu Footer */}
               <div className="p-4 border-t border-[var(--color-border)] space-y-3">
+                {/* Theme toggle in mobile */}
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-sm text-[var(--color-foreground-muted)]">Theme</span>
+                  <div className="flex gap-1">
+                    {([
+                      { value: "light" as const, icon: Sun },
+                      { value: "dark" as const, icon: Moon },
+                      { value: "system" as const, icon: Monitor },
+                    ]).map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setMode(option.value)}
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                          mode === option.value
+                            ? "bg-[hsl(263,70%,58%)]/10 text-[hsl(263,70%,58%)]"
+                            : "text-[var(--color-foreground-muted)] hover:bg-[var(--color-muted)]"
+                        }`}
+                      >
+                        <option.icon className="w-4 h-4" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => router.push("/login")}
-                  className="w-full glass-card-sm px-4 py-3 rounded-xl text-[var(--color-foreground)] font-medium flex items-center justify-center gap-2"
+                  className="w-full glass-card-sm px-4 py-3 rounded-xl font-medium flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   Login
@@ -453,7 +421,7 @@ export default function Navbar() {
                   className="w-full gradient-primary px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
-                  Get Started Free
+                  Register
                 </motion.button>
               </div>
             </motion.div>

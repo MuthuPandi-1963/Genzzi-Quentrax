@@ -1,23 +1,36 @@
-// Auto-generated from Prisma model: AuditLog
+// =============================================================================
+// MODEL: AuditLog
+// =============================================================================
 
-import { AuditAction } from './enums';
-
-import { UserProfile } from './UserProfile';
+import type { AuditAction } from './enums';
+import type { UserProfile } from './UserProfile';
 
 export interface AuditLog {
   id: string;
-  actorId: string;
+  actorId: string; // FK → UserProfile.id
+
   action: AuditAction;
+
+  /**
+   * Polymorphic target model name (e.g. "Assessment", "UserProfile").
+   * Pair with targetId to identify the affected record.
+   */
   targetType: string | null;
   targetId: string | null;
-  metadata: any | null;
+
+  /** JSON snapshot of what changed — stored as raw DB Json column */
+  metadata: Record<string, unknown> | null;
+
   createdAt: Date;
-  actor: UserProfile;
+
+  // ── Relations ─────────────────────────────────────────────────────────────
+  actor?: UserProfile;
 }
 
 export interface AuditLogCreateInput {
-  action?: AuditAction;
+  actorId: string;
+  action: AuditAction;
   targetType?: string | null;
-  metadata?: any | null;
-  actor?: UserProfile;
+  targetId?: string | null;
+  metadata?: Record<string, unknown> | null;
 }

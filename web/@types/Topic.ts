@@ -1,37 +1,47 @@
-// Auto-generated from Prisma model: Topic
+// =============================================================================
+// MODEL: Topic
+// =============================================================================
 
-import { Difficulty } from './enums';
-
-import { Assessment } from './Assessment';
-import { Category } from './Category';
-import { Question } from './Question';
-import { Quiz } from './Quiz';
+import type { Difficulty } from './enums';
+import type { Assessment } from './Assessment';
+import type { Category } from './Category';
+import type { Question } from './Question';
+import type { Quiz } from './Quiz';
 
 export interface Topic {
   id: string;
   name: string;
   description: string | null;
-  categoryId: string;
+  categoryId: string; // FK → Category.id
   imageUrl: string | null;
   difficulty: Difficulty;
   tags: string[];
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  category: Category;
-  questions: Question[];
-  assessments: Assessment[];
-  quizzes: Quiz[];
-}
 
-export interface TopicCreateInput {
-  name?: string;
-  description?: string | null;
-  imageUrl?: string | null;
-  difficulty?: Difficulty;
-  tags?: string[];
+  // ── Relations ─────────────────────────────────────────────────────────────
   category?: Category;
   questions?: Question[];
   assessments?: Assessment[];
   quizzes?: Quiz[];
+}
+
+export interface TopicCreateInput {
+  name: string;
+  categoryId: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  difficulty?: Difficulty;
+  tags?: string[];
+}
+
+export interface TopicUpdateInput {
+  name?: string;
+  categoryId?: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  difficulty?: Difficulty;
+  tags?: string[];
+  deletedAt?: Date | null;
 }

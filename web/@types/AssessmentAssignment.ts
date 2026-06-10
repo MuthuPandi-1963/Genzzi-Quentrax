@@ -1,29 +1,33 @@
-// Auto-generated from Prisma model: AssessmentAssignment
 
-import { AssignmentStatus } from './enums';
-
-import { Assessment } from './Assessment';
-import { UserProfile } from './UserProfile';
+import type { AssignmentStatus } from './enums';
+import type { Assessment } from './Assessment';
+import type { UserProfile } from './UserProfile';
 
 export interface AssessmentAssignment {
   id: string;
-  assessmentId: string;
-  userId: string;
+  assessmentId: string; // FK → Assessment.id
+  userId: string;       // FK → UserProfile.id
   status: AssignmentStatus;
   assignedAt: Date;
   dueDate: Date | null;
   startedAt: Date | null;
   completedAt: Date | null;
-  assessment: Assessment;
-  user: UserProfile;
+
+  // ── Relations ─────────────────────────────────────────────────────────────
+  assessment?: Assessment;
+  user?: UserProfile;
 }
 
 export interface AssessmentAssignmentCreateInput {
+  assessmentId: string;
+  userId: string;
   status?: AssignmentStatus;
-  assignedAt?: Date;
+  dueDate?: Date | null;
+}
+
+export interface AssessmentAssignmentUpdateInput {
+  status?: AssignmentStatus;
   dueDate?: Date | null;
   startedAt?: Date | null;
   completedAt?: Date | null;
-  assessment?: Assessment;
-  user?: UserProfile;
 }

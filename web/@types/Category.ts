@@ -1,6 +1,8 @@
-// Auto-generated from Prisma model: Category
+// =============================================================================
+// MODEL: Category
+// =============================================================================
 
-import { Topic } from './Topic';
+import type { Topic } from './Topic';
 
 export interface Category {
   id: string;
@@ -10,12 +12,20 @@ export interface Category {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  topics: Topic[];
+
+  // ── Relations ─────────────────────────────────────────────────────────────
+  topics?: Topic[];
 }
 
 export interface CategoryCreateInput {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+}
+
+export interface CategoryUpdateInput {
   name?: string;
   description?: string | null;
   imageUrl?: string | null;
-  topics?: Topic[];
+  deletedAt?: Date | null;
 }
