@@ -32,7 +32,7 @@ const scaleOnHover = {
 // Team Member Card Component
 const TeamCard = ({ name, role, avatarColor, index }: { name: string; role: string; avatarColor: string; index: number }) => (
   <motion.div
-    variants={fadeIn}
+    // variants={fadeIn}
     custom={index}
     initial="hidden"
     whileInView="visible"
@@ -51,7 +51,7 @@ const TeamCard = ({ name, role, avatarColor, index }: { name: string; role: stri
 // Value Card Component
 const ValueCard = ({ icon: Icon, title, description, delay }: { icon: React.ElementType; title: string; description: string; delay: number }) => (
   <motion.div
-    variants={fadeIn}
+    // variants={fadeIn}
     custom={delay}
     initial="hidden"
     whileInView="visible"
@@ -70,7 +70,7 @@ const ValueCard = ({ icon: Icon, title, description, delay }: { icon: React.Elem
 // Stat Counter Component
 const StatCard = ({ value, label, icon: Icon }: { value: string; label: string; icon: React.ElementType }) => (
   <motion.div
-    variants={fadeIn}
+    // variants={fadeIn}
     whileHover={{ scale: 1.05 }}
     className="text-center"
   >
@@ -271,7 +271,7 @@ export default function AboutUsPage() {
             
             <div className="mt-8 space-y-6 text-left">
               <motion.div
-                variants={fadeIn}
+                // variants={fadeIn}
                 className="relative bg-card rounded-2xl p-8 shadow-lg border border-border/50"
               >
                 <Quote className="absolute top-6 right-6 w-12 h-12 text-primary/10" />
@@ -283,7 +283,7 @@ export default function AboutUsPage() {
               </motion.div>
               
               <motion.div
-                variants={fadeIn}
+                // variants="fadeIn"
                 className="relative bg-card rounded-2xl p-8 shadow-lg border border-border/50"
               >
                 <p className="text-lg text-muted-foreground leading-relaxed">
