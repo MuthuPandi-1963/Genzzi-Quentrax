@@ -1,13 +1,9 @@
-// =============================================================================
-// ENUMS — mirrors prisma/schema.prisma exactly
-// All string-union aliases (*String) allow use without importing the enum.
-// =============================================================================
-
 export enum UserRole {
   ADMIN = 'ADMIN',
   STAFF = 'STAFF',
   STUDENT = 'STUDENT',
 }
+
 export type UserRoleString = 'ADMIN' | 'STAFF' | 'STUDENT';
 
 export enum Difficulty {
@@ -15,6 +11,7 @@ export enum Difficulty {
   medium = 'medium',
   hard = 'hard',
 }
+
 export type DifficultyString = 'easy' | 'medium' | 'hard';
 
 export enum QuestionType {
@@ -30,12 +27,14 @@ export enum QuestionStatus {
   active = 'active',
   inactive = 'inactive',
 }
+
 export type QuestionStatusString = 'active' | 'inactive';
 
 export enum QuizStatus {
   active = 'active',
   inactive = 'inactive',
 }
+
 export type QuizStatusString = 'active' | 'inactive';
 
 export enum AssessmentStatus {
@@ -44,6 +43,7 @@ export enum AssessmentStatus {
   ACTIVE = 'ACTIVE',
   COMPLETED = 'COMPLETED',
 }
+
 export type AssessmentStatusString = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'COMPLETED';
 
 export enum AttemptStatus {
@@ -51,6 +51,7 @@ export enum AttemptStatus {
   COMPLETED = 'COMPLETED',
   EXPIRED = 'EXPIRED',
 }
+
 export type AttemptStatusString = 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
 
 export enum AssignmentStatus {
@@ -59,6 +60,7 @@ export enum AssignmentStatus {
   COMPLETED = 'COMPLETED',
   EXEMPTED = 'EXEMPTED',
 }
+
 export type AssignmentStatusString = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXEMPTED';
 
 export enum AuditAction {
@@ -76,17 +78,5 @@ export enum AuditAction {
   QUIZ_DELETED = 'QUIZ_DELETED',
   COINS_ADJUSTED = 'COINS_ADJUSTED',
 }
-export type AuditActionString =
-  | 'USER_BLOCKED'
-  | 'USER_UNBLOCKED'
-  | 'USER_ROLE_CHANGED'
-  | 'USER_DELETED'
-  | 'ASSESSMENT_CREATED'
-  | 'ASSESSMENT_UPDATED'
-  | 'ASSESSMENT_ASSIGNED'
-  | 'ASSESSMENT_DELETED'
-  | 'QUESTION_CREATED'
-  | 'QUESTION_DELETED'
-  | 'QUIZ_CREATED'
-  | 'QUIZ_DELETED'
-  | 'COINS_ADJUSTED';
+
+export type AuditActionString = 'USER_BLOCKED' | 'USER_UNBLOCKED' | 'USER_ROLE_CHANGED' | 'USER_DELETED' | 'ASSESSMENT_CREATED' | 'ASSESSMENT_UPDATED' | 'ASSESSMENT_ASSIGNED' | 'ASSESSMENT_DELETED' | 'QUESTION_CREATED' | 'QUESTION_DELETED' | 'QUIZ_CREATED' | 'QUIZ_DELETED' | 'COINS_ADJUSTED';
