@@ -14,13 +14,12 @@ import { APP_GUARD } from "@nestjs/core";
 import { CustomThrottlerGuard } from "./common/guards/throttler.guard";
 import { RedisService } from "./database/redis.service";
 import { AppModule as MainModule } from "./app/app.module";
-// import { GlobalAuthGuard } from "./common/guards/jwt.guard";
 import { DeviceInfoMiddleware } from "./common/middleware/device-info.middleware";
 import { CommonModule } from "./common/common.module";
 import { DeviceModule } from "./core/device/device.module";
-import { AuthGuard } from "./common/guards/auth.guard";
 import { AuthModule } from "./app/auth/auth.module";
 import { RawBodyMiddleware } from "./common/middleware/raw-body.middleware";
+import { JwtAuthGuard } from "./common/guards/jwt.guard";
 
 @Module({
   imports: [
@@ -39,7 +38,7 @@ import { RawBodyMiddleware } from "./common/middleware/raw-body.middleware";
   ],
   providers: [
     { provide: APP_GUARD, useClass: CustomThrottlerGuard },
-    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
     // ← JWTRefreshGuard removed — plain provider here does nothing
   ],
 })

@@ -1,12 +1,13 @@
-// src/app/auth/auth.controller.ts
 import {
   Controller,
-  Get,
-  HttpStatus,
   Post,
+  Get,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import { type Response, type Request } from "express";
 import { Throttle } from "@nestjs/throttler";
@@ -14,173 +15,132 @@ import { ResponseSender } from "../../common/responser/response.sender";
 import { AuthService } from "./auth.service";
 import { OAuthCallbackDto } from "./dto/auth.dto";
 import { GenzziConfig } from "src/config/genzzi.config";
-import { SendCookie } from "src/config/cookie.config";
-import { ENV } from "src/config/env.Config";
 import { Public } from "src/common/decorators/public.decorator";
+import { CurrentUser } from "src/common/decorators/current-user.decorator";
+import type { AuthenticatedUser } from "./auth.service";
+import { JwtAuthGuard } from "src/common/guards/jwt.guard";
+import { plainToInstance } from "class-transformer";
+import { validateOrReject, ValidationError } from "class-validator";
 
-// ───────────────────────────────────────────
-// Type Definitions for Genzzi OAuth Response
-// ───────────────────────────────────────────
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
 
-interface GenzziTokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in?: number;
-  token_type?: string;
-}
-
-// interface GenzziProfile {
-//   sub: string;
-//   email: string;
-//   username?: string;
-//   phone?: string;
-//   picture?: string;
-//   [key: string]: unknown;
-// }
-
-// interface GenzziOAuthData {
-//   token: GenzziTokenResponse;
-//   profile: GenzziProfile;
-// }
-
-// Extend Express Response to include genzzi property
-
-interface GenzziIntrospectResponse {
-  active?: boolean;
-  data?: {
-    sub?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
-
-// ───────────────────────────────────────────
-// Controller
-// ───────────────────────────────────────────
+const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 min
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // ── Login ───────────────────────────────────────────────────────────────────
+
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60 } })
-  @Post("/genzzi/login")
+  @Post("genzzi/login")
+  @HttpCode(HttpStatus.OK)
   async oauthGenzziLogin(@Req() req: Request, @Res() res: Response) {
-    await GenzziConfig.oauthAuthorize(req, res, () => {});
+    try {
+      // 1. Delegate to Genzzi OAuth
+      await GenzziConfig.oauthAuthorize(req, res, () => {});
 
-    const genzziData = res.genzzi;
-    if (!genzziData) {
+      const genzziData = res.genzzi;
+      if (!genzziData?.token || !genzziData?.profile) {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json(ResponseSender.error("OAuth authorization failed"));
+      }
+
+      const profile = plainToInstance(OAuthCallbackDto, genzziData.profile);
+      await validateOrReject(profile);
+      if (!profile.sub) {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json(ResponseSender.error("Invalid OAuth profile — missing sub"));
+      }
+
+      // 2. Upsert user, issue our own tokens
+      const { accessToken, refreshToken } =
+        await this.authService.oauthCallback(req, profile);
+
+      // 3. Set HttpOnly cookies
+      res.cookie("access-token-education", accessToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: ACCESS_TOKEN_TTL_MS,
+      });
+      res.cookie("rft-education", refreshToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: REFRESH_TOKEN_TTL_MS,
+      });
+    } catch (errors) {
+      console.log("errors", errors);
+      const messages = (errors as ValidationError[])
+        .map((err) => Object.values(err.constraints || {}).join(", "))
+        .join("; ");
       return res
-        .status(400)
-        .json(
-          ResponseSender.error("OAuth authorization failed — no data received"),
-        );
+        .status(HttpStatus.BAD_REQUEST)
+        .json(ResponseSender.error(`Invalid OAuth profile: ${messages}`));
     }
 
-    const tokens = genzziData.token as GenzziTokenResponse;
-    const profile = genzziData.profile as OAuthCallbackDto;
+    return res
+      .status(HttpStatus.OK)
+      .json(ResponseSender.success(null, "Authenticated successfully"));
+  }
 
-    if (!tokens?.access_token || !profile?.sub) {
-      return res
-        .status(400)
-        .json(
-          ResponseSender.error(
-            "OAuth authorization failed — invalid tokens or profile",
-          ),
-        );
+  // ── Refresh ─────────────────────────────────────────────────────────────────
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60 } })
+  @Post("refresh")
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    const cookies = req.cookies as Record<string, string>;
+    const refreshToken = cookies["rft-education"];
+
+    if (!refreshToken) {
+      throw new UnauthorizedException("No refresh token provided");
     }
 
-    // Store OAuth tokens in cookies
-    SendCookie(res, "refresh-token-mail", tokens.refresh_token ?? "");
-    SendCookie(res, "access-token-mail", tokens.access_token ?? "");
+    const { accessToken } =
+      await this.authService.refreshAccessToken(refreshToken);
 
-    // Upsert local user
-    await this.authService.oauthCallback(req, profile, {
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+    res.cookie("access-token-education", accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: ACCESS_TOKEN_TTL_MS,
     });
 
     return res
-      .status(200)
-      .json(ResponseSender.success({ profile }, "Authenticated successfully"));
+      .status(HttpStatus.OK)
+      .json(ResponseSender.success(null, "Token refreshed successfully"));
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60 } })
-  @Post("refresh")
-  async refresh(@Req() req: Request, @Res() res: Response) {
-    const cookies = req.cookies as { "refresh-token-mail"?: string };
-    const refreshToken = cookies["refresh-token-mail"];
-
-    if (!refreshToken) {
-      throw new UnauthorizedException("No refresh token provided");
-    }
-
-    // One-time check: ask Genzzi if it's still valid
-    const check: unknown = await GenzziConfig.introspect(refreshToken);
-
-    return res.status(200).json(ResponseSender.success(null, "Token verified"));
-  }
+  // ── Logout ──────────────────────────────────────────────────────────────────
 
   @Post("logout")
+  @HttpCode(HttpStatus.OK)
   async logout(@Req() req: Request, @Res() res: Response) {
-    const cookies = req.cookies as {
-      "refresh-token-mail"?: string;
-      "access-token-mail"?: string;
-    };
-    const refreshToken = cookies["refresh-token-mail"];
-    const accessToken = cookies["access-token-mail"];
+    const cookies = req.cookies as Record<string, string>;
+    const refreshToken = cookies["rft-education"];
 
-    if (refreshToken) {
-      try {
-        const response: unknown = await GenzziConfig.revokeToken({
-          token: refreshToken,
-          token_type: "refresh_token",
-        });
-      } catch (error) {
-        console.error("Token revocation failed:", error);
-      }
-    }
+    await this.authService.logout(refreshToken);
 
-    // Clear cookies
-    res.clearCookie("refresh-token-mail");
-    res.clearCookie("access-token-mail");
+    res.clearCookie("access-token-education", { path: "/" });
+    res.clearCookie("rft-education", { path: "/" });
 
-    const result = await this.authService.logout(accessToken ?? "");
-    return res.status(result.statusCode).json(result);
+    return res
+      .status(HttpStatus.OK)
+      .json(ResponseSender.success(null, "Logged out successfully"));
   }
 
-  @Public()
+  // ── Me ───────────────────────────────────────────────────────────────────────
+
   @Get("me")
-  async me(@Req() req: Request, @Res() res: Response) {
-    const cookies = req.cookies as {
-      "access-token-mail"?: string;
-      "refresh-token-mail"?: string;
-    };
-    const accessToken = cookies["access-token-mail"];
-    const refreshToken = cookies["refresh-token-mail"];
-
-    if (!refreshToken) {
-      throw new UnauthorizedException("No refresh token provided");
-    }
-
-    if (!accessToken) {
-      throw new UnauthorizedException("No access token provided");
-    }
-
-    // One-time OAuth verification
-    const introspect: GenzziIntrospectResponse = (await GenzziConfig.introspect(
-      refreshToken,
-    )) as GenzziIntrospectResponse;
-
-    // Extract user identifier from introspect response
-    const userId = introspect.data?.sub;
-    if (!userId) {
-      throw new UnauthorizedException("Invalid or expired OAuth token");
-    }
-
-    const profile = await this.authService.getProfile(
-      `${userId}_${ENV.GENZZI_CLIENT_ID}`,
-    );
+  @UseGuards(JwtAuthGuard)
+  async me(@CurrentUser() user: AuthenticatedUser, @Res() res: Response) {
+    const profile = await this.authService.getProfile(user.authId);
     return res
       .status(HttpStatus.OK)
       .json(ResponseSender.success(profile, "Profile fetched"));

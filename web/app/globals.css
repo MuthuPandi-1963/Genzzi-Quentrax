@@ -1,5 +1,6 @@
 @import 'tailwindcss';
-@custom-variant dark (&:where(.dark, .dark *));/* ═══════════════════════════════════════════════════════════════
+
+/* ═══════════════════════════════════════════════════════════════
    QUIZ APP — TAILWIND V4 GLOBAL THEME
    Color Theory: Deep Purple Space + Neon Accents + Glassmorphism
    ═══════════════════════════════════════════════════════════════ */
@@ -336,7 +337,6 @@
    BASE STYLES
    ═══════════════════════════════════════════════════════════════ */
 @layer base {
-
   * {
     border-color: var(--color-border);
     box-sizing: border-box;
@@ -802,30 +802,6 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-}
-
-html, html.light, :root {
-  --color-background: #f8f7fc;
-  --color-background-elevated: #ffffff;
-  --color-foreground: #1a1429;
-  --color-foreground-muted: rgba(26,20,41,0.6);
-  --color-foreground-subtle: rgba(26,20,41,0.4);
-  --color-muted: rgba(26,20,41,0.06);
-  --color-border: rgba(26,20,41,0.1);
-  --color-primary: #7c3aed;
-  --color-accent: #c026d3;
-}
-
-html.dark {
-  --color-background: #110c1c;
-  --color-background-elevated: #1a1429;
-  --color-foreground: #ffffff;
-  --color-foreground-muted: rgba(255,255,255,0.6);
-  --color-foreground-subtle: rgba(255,255,255,0.4);
-  --color-muted: rgba(255,255,255,0.08);
-  --color-border: rgba(255,255,255,0.1);
-  --color-primary: #8b5cf6;
-  --color-accent: #d946ef;
 }
 
 @keyframes shimmer {

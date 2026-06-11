@@ -30,28 +30,28 @@ export const useQuestions = () => {
   const createQuestion = useMutation({
     mutationFn: QuestionAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries(["questions"]);
     },
   });
 
   const createMany = useMutation({
     mutationFn: QuestionAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries(["questions"]);
     },
   });
 
   const updateQuestion = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => QuestionAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries(["questions"]);
     },
   });
 
   const deleteQuestion = useMutation({
     mutationFn: (id: string) => QuestionAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries(["questions"]);
     },
   });
 

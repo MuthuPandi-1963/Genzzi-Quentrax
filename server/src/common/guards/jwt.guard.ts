@@ -1,13 +1,16 @@
-import { ExecutionContext, Injectable } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { Observable } from "rxjs";
-
+import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
-import { AccessTokenInvalidException } from "../exceptions/token.exceptions";
+import { Observable } from "rxjs";
+import { AuthenticatedUser } from "src/app/auth/auth.service";
 
 @Injectable()
-export class GlobalAuthGuard extends AuthGuard("jwt-access") {
+export class JwtAuthGuard extends AuthGuard("jwt-access-education") {
   constructor(private readonly reflector: Reflector) {
     super();
   }
@@ -19,35 +22,21 @@ export class GlobalAuthGuard extends AuthGuard("jwt-access") {
       context.getHandler(),
       context.getClass(),
     ]);
-
-    if (isPublic) {
-      return true;
-    }
-
-    const refreshGuardUsed = this.reflector.getAllAndOverride<boolean>(
-      "refreshOnly",
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (refreshGuardUsed) {
-      return true;
-    }
-
+    if (isPublic) return true;
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = unknown>(err: Error | null, user: TUser | null): TUser {
-    if (err) {
-      throw err;
+  handleRequest<TUser = AuthenticatedUser>(
+    err: any,
+    user: any,
+    info: { message: string },
+  ): TUser {
+    if (err || !user) {
+      throw new UnauthorizedException(
+        info?.message ?? "Access token missing or invalid",
+      );
     }
 
-    if (!user) {
-      throw new AccessTokenInvalidException();
-    }
-
-    return user;
+    return user as TUser;
   }
 }
-
-@Injectable()
-export class JWTRefreshGuard extends AuthGuard("jwt-refresh") {}

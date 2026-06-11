@@ -29,28 +29,28 @@ export const useUsers = () => {
   const updateMe = useMutation({
     mutationFn: UserAPI.updateMe,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries(["me"]);
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => UserAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries(["users"]);
     },
   });
 
   const deleteUser = useMutation({
     mutationFn: (id: string) => UserAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries(["users"]);
     },
   });
 
   const block = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => UserAPI.block(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries(["users"]);
     },
   });
 

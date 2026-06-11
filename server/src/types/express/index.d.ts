@@ -15,9 +15,16 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-declare namespace Express {
-  interface Request {
-    /** Normalised request ID — set by HttpLoggerMiddleware on every request. */
-    requestId: string;
+// src/types/express.d.ts
+import { DeviceInfo } from "src/core/device/device.service"; // Adjust the import path
+
+declare global {
+  namespace Express {
+    interface Request {
+      requestId: string;
+      deviceInfo: DeviceInfo; // Replace `DeviceInfo` with the actual return type of buildDeviceInfo()
+    }
   }
 }
+
+export {}; // This makes the file a module, required for global augmentation

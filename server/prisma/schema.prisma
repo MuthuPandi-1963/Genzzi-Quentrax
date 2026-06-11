@@ -4,6 +4,7 @@
 
 generator client {
   provider     = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
   }
 
 datasource db {
@@ -16,7 +17,7 @@ datasource db {
 
 model Auth {
   id         String   @id @default(uuid()) @db.Uuid
-  sub        String   @unique          // OAuth "sub" claim — stable identity key
+  sub        String   @unique
   email      String   @unique
   username   String   @unique
   picture    String?
@@ -24,8 +25,9 @@ model Auth {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  deviceInfos   DeviceInfo[]
-  sessionTokens SessionToken[]
+  deviceInfos DeviceInfo[]
+
+  userProfile UserProfile?
 
   @@map("auth")
 }
@@ -48,41 +50,46 @@ model DeviceInfo {
   created_at         DateTime  @default(now())
 
   user          Auth           @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  sessionTokens SessionToken[]
 
   @@index([user_id])
   @@index([device_fingerprint])
   @@map("device_info")
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SESSION TOKENS (JWT + ROTATING REFRESH)
-// ─────────────────────────────────────────────────────────────────────────────
+// =============================================================================
+// PROFILE TABLE  (identity, display data, roles, activity)
+// =============================================================================
 
-model SessionToken {
-  id           String    @id @default(uuid()) @db.Uuid
-  user_id      String    @db.Uuid
-  device_id    String    @db.Uuid
+model UserProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  countryCode String?  @db.Char(2)
+  avatar      String?  @db.VarChar(500)
+  bio         String?  @db.VarChar(500)
+  role        UserRole @default(STUDENT)
 
-  access_jti   String    @unique
-  refresh_hash String
+  deletedAt DateTime?
 
-  ip_address   String
-  user_agent   String
+  authId String @unique @db.Uuid
+  auth   Auth   @relation(fields: [authId], references: [id], onDelete: Cascade)
 
-  expires_at   DateTime
-  revoked_at   DateTime?
-  replaced_by  String?
+  quizHistory           QuizHistory[]
+  createdQuizzes        Quiz[]                 @relation("QuizCreator")
+  coinsHistory          CoinsHistory[]
+  createdAssessments    Assessment[]           @relation("AssessmentCreator")
+  auditLogsActed        AuditLog[]             @relation("AuditActor")
 
-  created_at   DateTime  @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user   Auth       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  device DeviceInfo @relation(fields: [device_id], references: [id], onDelete: Cascade)
-
-  @@index([user_id])
-  @@index([access_jti])
-  @@index([device_id])
-  @@map("session_tokens")
+  @@index([role, name])
+  @@index([deletedAt])
+  quizHistories QuizHistory[] @relation("UserQuizHistory")
+  coinsHistories CoinsHistory[] @relation(name: "CoinsHistory")
+  coins Coins[] @relation(name: "Coins")
+  assessmentAttempts AssessmentAttempt[] @relation(name: "AssessmentAttempt")
+  assessments Assessment[]
+  assessmentAssignments AssessmentAssignment[] @relation(name: "AssessmentAssignment")
 }
 
 // =============================================================================
@@ -103,7 +110,8 @@ model SessionToken {
 //  - Missing indexes added
 //  - failedLoginAttempts + lockedUntil for rate limiting
 //  - DB-level CHECK constraints documented as raw SQL migrations
-// =============================================================================
+
+
 // =============================================================================
 // ENUMS
 // =============================================================================
@@ -172,122 +180,14 @@ enum AuditAction {
   COINS_ADJUSTED
 }
 
-// =============================================================================
-// AUTH TABLE  (credentials, tokens, security state)
-// =============================================================================
-
-model UserAuth {
-  id     String @id @default(uuid())
-  userId String @unique // FK → UserProfile
-
-  // Credentials
-  email    String @unique @db.VarChar(254)
-  // Store bcrypt/argon2 hash only. Max 72 bytes input for bcrypt.
-  password String @db.VarChar(255)
-
-  // Email verification  — store SHA-256(token), send raw token by email
-  verificationTokenHash      String?
-  verificationTokenExpiresAt DateTime?
-  isVerified                 Boolean   @default(false)
-
-  // Password reset  — same pattern: hash stored, raw token emailed
-  passwordResetTokenHash      String?
-  passwordResetTokenExpiresAt DateTime?
-
-  // TOTP / MFA  — secret must be encrypted at application layer
-  totpSecret  String?  @db.VarChar(512)
-  totpEnabled Boolean  @default(false)
-
-  // Account state
-  isBlocked Boolean @default(false)
-
-  // Brute-force / rate-limiting
-  failedLoginAttempts Int       @default(0)
-  lockedUntil         DateTime?
-
-  // Soft delete
-  deletedAt DateTime?
-
-  // Relations
-  profile  UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessions Session[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email, isBlocked, deletedAt])
-  @@index([verificationTokenHash])
-  @@index([passwordResetTokenHash])
-}
-
-// =============================================================================
-// PROFILE TABLE  (identity, display data, roles, activity)
-// =============================================================================
-
-model UserProfile {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(100)
-  // ISO 3166-1 alpha-2 country code
-  // SQL constraint: CHECK (char_length("countryCode") = 2)
-  countryCode String?  @db.Char(2)
-  avatar      String?  @db.VarChar(500)
-  bio         String?  @db.VarChar(500)
-  role        UserRole @default(STUDENT)
-
-  // Soft delete
-  deletedAt DateTime?
-
-  // Relations
-  auth                  UserAuth?
-  quizHistory           QuizHistory[]
-  createdQuizzes        Quiz[]                 @relation("QuizCreator")
-  coins                 Coins?
-  coinsHistory          CoinsHistory[]
-  createdAssessments    Assessment[]           @relation("AssessmentCreator")
-  assessmentAssignments AssessmentAssignment[]
-  assessmentAttempts    AssessmentAttempt[]
-  auditLogsActed        AuditLog[]             @relation("AuditActor")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([role, name])
-  @@index([deletedAt])
-  users User[]
-}
-
-// =============================================================================
-// SESSION  (refresh tokens — one row per active device/session)
-// =============================================================================
-
-model Session {
-  id         String   @id @default(uuid())
-  userAuthId String
-
-  // Store SHA-256(refreshToken) — send raw token to client
-  tokenHash String   @unique @db.VarChar(255)
-  userAgent String?  @db.VarChar(500)
-  ipAddress String?  @db.VarChar(45) // IPv6 max = 45 chars
-  expiresAt DateTime
-
-  // Soft revoke (keeps audit trail)
-  revokedAt DateTime?
-
-  userAuth UserAuth @relation(fields: [userAuthId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([userAuthId, expiresAt])
-  @@index([tokenHash])
-}
 
 // =============================================================================
 // AUDIT LOG
 // =============================================================================
 
 model AuditLog {
-  id         String      @id @default(uuid())
-  actorId    String
+  id         String      @id @default(uuid()) @db.Uuid
+  actorId    String      @db.Uuid
   action     AuditAction
   // Polymorphic target — store model name + id
   targetType String?     @db.VarChar(50)
@@ -389,23 +289,20 @@ model Quiz {
   id          String     @id @default(uuid())
   title       String     @db.VarChar(200)
   description String?    @db.VarChar(1000)
-  // totalPoints is COMPUTED — do not write directly.
-  // Use: SELECT SUM(q.points) FROM Question q JOIN _QuizToQuestion jt ON jt.B=q.id WHERE jt.A = quiz.id
-  // Keep as cached value updated via Prisma middleware on question add/remove.
   totalPoints Int        @default(0)
   status      QuizStatus @default(active)
   tags        String[]   @default([])
-  timeLimit   Int? // minutes — SQL CHECK: timeLimit > 0
+  timeLimit   Int?
   imageUrl    String?    @db.VarChar(500)
-  creatorId   String
 
-  topicId String?
+  creatorId String @db.Uuid
+  topicId   String?
 
-  // Soft delete
   deletedAt DateTime?
 
-  creator User      @relation("QuizCreator", fields: [creatorId], references: [id])
-  topic   Topic?    @relation(name: "quiz_topics", fields: [topicId], references: [id])
+  creator UserProfile @relation("QuizCreator",fields: [creatorId],references: [id])
+
+  topic Topic? @relation("quiz_topics",fields: [topicId],references: [id])
 
   questions    Question[]
   history      QuizHistory[]
@@ -417,33 +314,12 @@ model Quiz {
 
   @@index([creatorId, status, deletedAt])
   @@index([topicId, status])
-  userProfiles UserProfile[] @relation("QuizCreator")
 }
 
-// Alias so existing code using "User" still works during migration
-// Remove once codebase is updated to use UserProfile directly.
-model User {
-  id        String      @id @default(uuid())
-  profileId String      @unique
-
-  profile UserProfile @relation(fields: [profileId], references: [id])
-
-  // Re-export relations for backward compat
-  quizHistory           QuizHistory[]           @relation("UserQuizHistory")
-  createdQuizzes        Quiz[]                  @relation("QuizCreator")
-  coins                 Coins? @relation(fields: [coinsid], references: [id])
-coinsid String?
-  coinsHistory          CoinsHistory[]
-  createdAssessments    Assessment[]            @relation("AssessmentCreator")
-  assessmentAssignments AssessmentAssignment[]
-  assessmentAttempts    AssessmentAttempt[]
-
-  @@map("_UserCompat") // temporary compat view, remove after migration
-}
 
 model QuizHistory {
-  id          String   @id @default(uuid())
-  userId      String
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
   quizId      String
   score       Int
   completedAt DateTime @default(now())
@@ -456,7 +332,7 @@ model QuizHistory {
 
   @@index([userId, quizId])
   @@index([quizId, score]) // leaderboard queries
-  users User[] @relation("UserQuizHistory")
+  users UserProfile[] @relation("UserQuizHistory")
 }
 
 // =============================================================================
@@ -464,8 +340,8 @@ model QuizHistory {
 // =============================================================================
 
 model Coins {
-  id     String @id @default(uuid())
-  userId String @unique
+  id     String @id @default(uuid())  @db.Uuid
+  userId String @unique @db.Uuid
   // SQL CHECK: balance >= 0
   // Always update via: prisma.coins.update({ data: { balance: { increment: n } } })
   // Never read-modify-write — race condition.
@@ -474,29 +350,27 @@ model Coins {
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 
-  user    UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    UserProfile  @relation(name: "Coins",fields: [userId], references: [id], onDelete: Cascade)
   history CoinsHistory[]
-
-  users User[]
 }
 
 model CoinsHistory {
-  id        String   @id @default(uuid())
-  userId    String
-  coinsId   String   // FK → Coins.id for join without subquery
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String  @db.Uuid
+  coinsId   String  @db.Uuid // FK → Coins.id for join without subquery
   coins     Int      // positive = earned, negative = spent
   reason    String?  @db.VarChar(200)
   quizId    String?
   createdAt DateTime @default(now())
 
   // Always insert inside prisma.$transaction with the Coins.balance increment
-  user  UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  UserProfile @relation(name: "CoinsHistory",fields: [userId], references: [id], onDelete: Cascade)
   coin  Coins       @relation(fields: [coinsId], references: [id], onDelete: Cascade)
   quiz  Quiz?       @relation(fields: [quizId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt]) // ledger timeline
   @@index([coinsId])
-  users User[]
+  users UserProfile[]
 }
 
 // =============================================================================
@@ -504,7 +378,7 @@ model CoinsHistory {
 // =============================================================================
 
 model Assessment {
-  id          String           @id @default(uuid())
+  id          String           @id @default(uuid())  @db.Uuid
   title       String           @db.VarChar(200)
   description String?          @db.VarChar(2000)
   status      AssessmentStatus @default(DRAFT)
@@ -543,9 +417,9 @@ model Assessment {
   // Soft delete
   deletedAt DateTime?
 
-  creatorId String
+  creatorId String   @db.Uuid
   topic     Topic?  @relation(name: "assessment_topics", fields: [topicId], references: [id], onDelete: SetNull)
-  creator   UserProfile            @relation("AssessmentCreator", fields: [creatorId], references: [id])
+  creator   UserProfile            @relation( fields: [creatorId], references: [id])
 
   assessmentQuestions AssessmentQuestion[]
   assignments         AssessmentAssignment[]
@@ -560,7 +434,7 @@ model Assessment {
   @@index([published, status])
   @@index([topicId])
   @@index([deadline, status]) // deadline monitoring queries
-  users User[] @relation("AssessmentCreator")
+  users UserProfile[] @relation("AssessmentCreator")
 }
 
 model AssessmentAssignment {
@@ -574,13 +448,12 @@ model AssessmentAssignment {
   completedAt  DateTime?
 
   assessment Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(name: "AssessmentAssignment",fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([assessmentId, userId])
   @@index([assessmentId, status])
   @@index([userId, status])
   @@index([userId, assessmentId])
-  users User[]
 }
 
 model AssessmentAttempt {
@@ -601,12 +474,11 @@ model AssessmentAttempt {
   violations Int @default(0)
 
   assessment Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(name: "AssessmentAttempt",fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, assessmentId])
   @@index([assessmentId, score]) // best-score queries
   @@index([status])
-  users User[]
 }
 
 // Questions attached directly to an assessment (single source of truth)

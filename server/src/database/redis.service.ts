@@ -31,6 +31,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       await this.client.set(key, JSON.stringify(value));
     }
   }
+  async getRaw(key: string): Promise<string | null> {
+    return this.client.get(key);
+  }
 
   async get(key: string): Promise<string | null> {
     const data = (await this.client.get(key)) as string;

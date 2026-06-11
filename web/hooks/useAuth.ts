@@ -7,8 +7,8 @@ export const useAuth = () => {
   const login = useMutation({
     mutationFn: AuthAPI.login,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries(["me"]);
+      queryClient.invalidateQueries(["sessions"]);
     },
   });
 

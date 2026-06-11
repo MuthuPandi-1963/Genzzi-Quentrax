@@ -46,28 +46,28 @@ export const useQuizzes = () => {
   const createQuiz = useMutation({
     mutationFn: QuizAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries(["quizzes"]);
     },
   });
 
   const createMany = useMutation({
     mutationFn: QuizAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries(["quizzes"]);
     },
   });
 
   const updateQuiz = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => QuizAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries(["quizzes"]);
     },
   });
 
   const deleteQuiz = useMutation({
     mutationFn: (id: string) => QuizAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries(["quizzes"]);
     },
   });
 
@@ -75,22 +75,22 @@ export const useQuizzes = () => {
     mutationFn: ({ quizId, addedQuestionIds }: { quizId: string; addedQuestionIds: string[] }) =>
       QuizAPI.addQuestions(quizId, addedQuestionIds),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes", vars.quizId] });
+      queryClient.invalidateQueries(["quizzes", vars.quizId]);
     },
   });
 
   const start = useMutation({
     mutationFn: (id: string) => QuizAPI.start(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries(["quizzes"]);
     },
   });
 
   const submit = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => QuizAPI.submit(id, data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes", vars.id, "history"] });
-      queryClient.invalidateQueries({ queryKey: ["coins"] });
+      queryClient.invalidateQueries(["quizzes", vars.id, "history"]);
+      queryClient.invalidateQueries(["coins"]);
     },
   });
 

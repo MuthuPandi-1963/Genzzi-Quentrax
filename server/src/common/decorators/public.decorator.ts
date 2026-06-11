@@ -3,11 +3,8 @@ import { SetMetadata } from "@nestjs/common";
 export const IS_PUBLIC_KEY = "isPublic";
 
 /**
- * Mark a route as public — skips the AuthGuard entirely.
- *
- * @example
- * @IsPublic()
- * @Get('health')
- * healthCheck() { ... }
+ * @Public()
+ * Skip JWT authentication for this route.
+ * Must be used with JwtAuthGuard that checks for this metadata.
  */
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);

@@ -7,23 +7,12 @@ import Link from "next/link";
 import QuizCard from "@/components/data-display/QuizCard";
 import { useParams } from "next/navigation";
 
-type TopicDifficulty = "easy" | "medium" | "hard";
-
 // Mock data
-const mockTopic: {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: TopicDifficulty;
-  tags: string[];
-  category: { name: string };
-  quizzes: React.ComponentProps<typeof QuizCard>["quiz"][];
-  sampleQuestions: string[];
-} = {
+const mockTopic = {
   id: "1",
   name: "React Navigation",
   description: "Learn about routing patterns, dynamic segments, and layout state in modern React applications.",
-  difficulty: "medium",
+  difficulty: "medium" as const,
   tags: ["react", "frontend", "routing"],
   category: { name: "Technology" },
   quizzes: [
