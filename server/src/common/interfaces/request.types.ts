@@ -1,5 +1,5 @@
 import { type Request } from "express";
-import { type DeviceInfo, type SessionToken } from "@prisma/client";
+import { type DeviceInfo } from "@prisma/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Extend Express's Request — NOT the global fetch API Request.
@@ -27,6 +27,5 @@ export interface AuthenticatedUser {
 export interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
   device: DeviceInfo;
-  session: SessionToken;
   accessJti: string;
 }

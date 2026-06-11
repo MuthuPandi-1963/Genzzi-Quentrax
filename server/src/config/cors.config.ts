@@ -40,10 +40,10 @@ export const CORS_CONFIG: CorsOptions = {
     "x-mobile-client",
     "x-device-id",
     "x-access-token",
-    "x-refresh-token",
+    "x-refresh-token-education",
   ],
 
-  exposedHeaders: ["x-access-token", "x-refresh-token"],
+  exposedHeaders: ["x-access-token", "x-refresh-token-education"],
 
   maxAge: 86400, // 24 hours preflight cache (performance boost)
   optionsSuccessStatus: 204,

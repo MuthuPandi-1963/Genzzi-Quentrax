@@ -2,10 +2,9 @@ import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { DeviceModule } from "./device/device.module";
 import { LoggerModule } from "./logger/logger.module";
 import { HttpLoggerMiddleware } from "../common/middleware/http.middleware";
-import { SocketModule } from "./socket/socket.module";
 
 @Module({
-  imports: [LoggerModule, DeviceModule, SocketModule],
+  imports: [LoggerModule, DeviceModule],
 })
 export class CoreModule {
   configure(consumer: MiddlewareConsumer) {
