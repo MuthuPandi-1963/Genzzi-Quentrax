@@ -20,15 +20,21 @@ export default function QuizzesBrowserPage() {
   const [filterTopic, setFilterTopic] = useState<string>("all");
 
   const filteredQuizzes = mockQuizzes.filter(quiz => {
+    if(filterTopic.toLowerCase() == "all"){
+      return mockQuizzes
+    }
+
     const matchesSearch = quiz.title.toLowerCase().includes(search.toLowerCase()) || (quiz.description?.toLowerCase().includes(search.toLowerCase()));
     const matchesTopic = filterTopic === "all" || quiz.topic.name.toLowerCase() === filterTopic.toLowerCase();
     return matchesSearch && matchesTopic;
   });
 
+  console.log(filteredQuizzes,filterTopic,search);
+  
   const popularTopics = ["All", "React Navigation", "Quantum Mechanics", "World War II", "Python Basics"];
 
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className="min-h-screen bg-background text-foreground/80 pt-24 pb-20 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}
@@ -38,7 +44,7 @@ export default function QuizzesBrowserPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black mb-4 tracking-tight"
           >
-            Public <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Quizzes</span>
+            Public <span className="text-transparent bg-clip-text  bg-linear-to-r from-emerald-500 to-teal-500">Quizzes</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -58,13 +64,14 @@ export default function QuizzesBrowserPage() {
           className="flex flex-col md:flex-row gap-4 mb-12"
         >
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input 
               type="text" 
               placeholder="Search quizzes..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 focus:ring-2 focus:ring-emerald-500/50 outline-none text-gray-900 dark:text-white shadow-sm"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-background   border-black border-2
+               dark:border-white/10 focus:ring-2 focus:ring-emerald-500/50 outline-none  shadow-sm"
             />
           </div>
           
@@ -76,8 +83,8 @@ export default function QuizzesBrowserPage() {
                 onClick={() => setFilterTopic(topic)}
                 className={`px-4 py-2 my-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
                   (filterTopic === "all" && topic === "All") || filterTopic.toLowerCase() === topic.toLowerCase()
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" 
-                    : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-100/30 dark:text-emerald-400" 
+                    : "bg-transparent text-muted-foreground "
                 }`}
               >
                 {topic}

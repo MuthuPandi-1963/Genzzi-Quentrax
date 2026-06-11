@@ -41,7 +41,7 @@ export default function TopicsBrowserPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-black mb-4 tracking-tight"
           >
-            Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Topics</span>
+            Explore <span className="text-transparent bg-clip-text  bg-linear-to-r from-blue-600 to-cyan-500">Topics</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -58,7 +58,7 @@ export default function TopicsBrowserPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col md:flex-row gap-4 mb-12 p-4 bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl shadow-sm"
+          className="flex flex-col md:flex-row gap-4 mb-12 p-4 rounded-sm shadow-sm"
         >
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -67,11 +67,11 @@ export default function TopicsBrowserPage() {
               placeholder="Search topics by name or tag..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-transparent focus:ring-0 outline-none text-gray-900 dark:text-white"
+              className="w-full pl-12 pr-4 py-3 rounded-2xl  focus:ring-0 outline-none"
             />
           </div>
           
-          <div className="w-px bg-black/10 dark:bg-white/10 hidden md:block" />
+          <div className="w-px hidden md:block" />
           
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
             <Filter className="w-4 h-4 text-gray-400 ml-2" />
@@ -79,10 +79,10 @@ export default function TopicsBrowserPage() {
               <button
                 key={diff}
                 onClick={() => setFilterDifficulty(diff)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap capitalize transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap capitalize transition-colors cursor-pointer ${
                   filterDifficulty === diff 
                     ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+                    : " text-foreground-muted/80    hover:text-foreground"
                 }`}
               >
                 {diff}

@@ -111,12 +111,7 @@ const testimonials = [
   },
 ];
 
-/* ─── Helpers ───────────────────────────────────────────────── */
 
-function seededRand(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
 
 /* ─── Sub-components ────────────────────────────────────────── */
 
@@ -315,7 +310,7 @@ useEffect(() => {
         <ParticleField/>
 
         <motion.div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-175 h-175 rounded-full"
           style={{
             background: isDark
               ? "radial-gradient(circle, hsl(263 70% 40% / 0.28) 0%, transparent 70%)"
@@ -529,7 +524,7 @@ useEffect(() => {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px bg-gradient-to-r from-transparent via-[hsl(263,70%,58%)]/40 to-transparent" />
+            <div className="hidden md:block absolute top-1/2 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px  bg-linear-to-r from-transparent via-[hsl(263,70%,58%)]/40 to-transparent" />
 
             {howItWorks.map((item, i) => (
               <SpotlightCard
@@ -696,7 +691,7 @@ useEffect(() => {
                   className="flex items-start gap-5 w-full"
                 >
                   <motion.div
-                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center flex-shrink-0`}
+                    className={`w-14 h-14 rounded-2xl  bg-linear-to-br ${feature.color} flex items-center justify-center flex-shrink-0`}
                     whileHover={{ scale: 1.15, rotate: 8 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -903,7 +898,7 @@ useEffect(() => {
                 </p>
                 <div className="flex items-center gap-3">
                   <motion.div
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white"
+                    className="w-10 h-10 rounded-full  bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white"
                     whileHover={{ scale: 1.2 }}
                   >
                     {t.avatar}

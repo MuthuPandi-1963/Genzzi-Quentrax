@@ -8,7 +8,6 @@ import {
   X,
   Sparkles,
   HelpCircle,
-  LogIn,
   UserPlus,
   Moon,
   Sun,
@@ -16,12 +15,11 @@ import {
   Grid3X3,
   Layers,
   BookOpen,
-  Trophy,
   Zap,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-
+import {Button as GenzziButton} from '@genzzi/oauth-client'
 // Mock user data - replace with your actual auth logic
 const useAuth = () => {
   const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
@@ -109,7 +107,7 @@ function DesktopNavLink({
       {isActive && (
         <motion.div
           layoutId="desktopActiveIndicator"
-          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full"
+          className="absolute -bottom-1 left-2 right-2 h-0.5  bg-linear-to-r from-primary to-accent rounded-full"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
       )}
@@ -128,6 +126,7 @@ export default function Navbar() {
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const client_id = process.env.NEXT_PUBLIC_GENZZI_CLIENT_ID;
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -233,7 +232,7 @@ export default function Navbar() {
         className="border-b"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16 md:h-[4.5rem]">
+          <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
             <motion.div
               className="flex items-center gap-2.5 cursor-pointer"
@@ -241,10 +240,10 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="relative w-9 h-9 rounded-xl  bg-linear-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
                 <Sparkles className="w-5 h-5 text-white relative z-10" />
                 <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-accent"
+                  className="absolute inset-0 rounded-xl  bg-linear-to-br from-primary to-accent"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -253,7 +252,7 @@ export default function Navbar() {
                 <span className="text-lg font-black text-foreground leading-tight tracking-tight">
                   Quentrax
                 </span>
-                <span className="text-[10px] text-muted-foreground/70 leading-none tracking-wider uppercase">
+                <span className="text-[10px] text-muted-foreground leading-none tracking-wider">
                   by Genzzi
                 </span>
               </div>
@@ -303,7 +302,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-12 w-40 bg-popover border border-border rounded-xl shadow-xl p-1 z-50"
+                      className="absolute right-0 top-12 w-40 bg-background border border-border rounded-xl shadow-xl p-1 z-50"
                     >
                       {(
                         [
@@ -362,25 +361,14 @@ export default function Navbar() {
                 </motion.button>
               ) : (
                 <>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => router.push("/login")}
-                    className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </motion.button>
+                    <GenzziButton 
+                    variant={`${isDark ? 'dark' : "light"}`}
+                    oauthConfig={{
+                      client_id: client_id ?? "assdfrerefvfg"
+                    }}>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.push("/signup")}
-                    className="bg-gradient-to-r from-primary to-accent px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 text-white shadow-md shadow-primary/25"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Get Started
-                  </motion.button>
+                      Sign With Genzzi
+                    </GenzziButton>
                 </>
               )}
             </div>
@@ -468,7 +456,7 @@ export default function Navbar() {
               {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg  bg-linear-to-br from-primary to-accent flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <span className="font-bold text-foreground">Menu</span>
@@ -522,7 +510,7 @@ export default function Navbar() {
               </div>
 
               {/* Menu Footer - Auth Actions */}
-              <div className="p-4 border-t border-border space-y-3">
+              <div className="p-4 border-t border-border space-y-3 w-full">
                 {isAuthenticated ? (
                   <>
                     <motion.button
@@ -544,24 +532,12 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => router.push("/login")}
-                      className="w-full border border-border px-4 py-3 rounded-xl text-foreground font-medium flex items-center justify-center gap-2"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      Login
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => router.push("/signup")}
-                      className="w-full bg-gradient-to-r from-primary to-accent px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 text-white shadow-md shadow-primary/25"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Get Started
-                    </motion.button>
+                      <GenzziButton className="w-full float-end" oauthConfig={{
+                      client_id: client_id ?? "sdfwr3re3refgefg"
+                    }}>
+
+                      Sign With Genzzi
+                    </GenzziButton>
                   </>
                 )}
               </div>

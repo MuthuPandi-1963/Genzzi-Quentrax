@@ -46,8 +46,8 @@ export default function AssessmentResultPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           className={`rounded-3xl p-8 md:p-12 mb-8 text-center text-white relative overflow-hidden shadow-xl ${
             mockResult.passed 
-              ? "bg-gradient-to-br from-emerald-500 to-teal-600" 
-              : "bg-gradient-to-br from-red-500 to-orange-600"
+              ? " bg-linear-to-br from-emerald-500 to-teal-600" 
+              : " bg-linear-to-br from-red-500 to-orange-600"
           }`}
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />

@@ -49,7 +49,7 @@ export default function AdminTopbar({ isStaff = false }: { isStaff?: boolean }) 
               {isStaff ? "Staff Member" : "System Admin"}
             </p>
           </div>
-          <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${isStaff ? 'from-blue-500 to-cyan-500' : 'from-red-500 to-orange-500'} p-[2px]`}>
+          <div className={`w-10 h-10 rounded-full  bg-linear-to-tr ${isStaff ? 'from-blue-500 to-cyan-500' : 'from-red-500 to-orange-500'} p-[2px]`}>
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&style=circle" alt="Avatar" className="w-full h-full rounded-full bg-white dark:bg-gray-900" />
           </div>
         </button>

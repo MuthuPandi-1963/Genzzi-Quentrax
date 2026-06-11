@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Library } from "lucide-react";
 import Link from "next/link";
 import QuizCard from "@/components/data-display/QuizCard";
 import { useParams } from "next/navigation";
+import { diffColors } from "@/components/data-display/TopicCard";
 
 // Mock data
 const mockTopic = {
@@ -27,15 +28,14 @@ const mockTopic = {
 };
 
 export default function TopicDetailPage() {
-  const params = useParams();
   
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className="min-h-screen  pt-24 pb-20 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb & Back */}
         <div className="mb-8">
-          <Link href="/topics" className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline">
+          <Link href="/topics" className="inline-flex items-center gap-2  font-medium hover:underline">
             <ArrowLeft className="w-4 h-4" />
             Back to Topics
           </Link>
@@ -51,14 +51,14 @@ export default function TopicDetailPage() {
               className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl p-8 shadow-sm"
             >
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                <span className="text-sm font-bold uppercase tracking-wider text-category-geography">
                   {mockTopic.category.name}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
                 <span className={`text-xs px-2.5 py-1 rounded-md font-bold uppercase tracking-wider ${
-                  mockTopic.difficulty === "easy" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                  mockTopic.difficulty === "medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  mockTopic.difficulty == "easy" ? diffColors.easy :
+                  mockTopic.difficulty === "medium" ? diffColors.medium :
+                  diffColors.hard
                 }`}>
                   {mockTopic.difficulty}
                 </span>
@@ -71,7 +71,7 @@ export default function TopicDetailPage() {
               
               <div className="flex flex-wrap gap-2">
                 {mockTopic.tags.map(tag => (
-                  <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium">
+                  <span key={tag} className="px-3 py-1 text-foreground-muted/80 rounded-lg text-sm font-medium">
                     #{tag}
                   </span>
                 ))}
@@ -98,7 +98,7 @@ export default function TopicDetailPage() {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-b from-blue-50 to-white dark:from-blue-900/10 dark:to-white/5 border border-blue-100 dark:border-blue-900/30 rounded-3xl p-8"
+              className="shadow-foreground/20 shadow-lg rounded-3xl p-8"
             >
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 Sample Questions
@@ -106,8 +106,8 @@ export default function TopicDetailPage() {
               <ul className="space-y-4">
                 {mockTopic.sampleQuestions.map((q, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="font-bold text-blue-500">{i + 1}.</span>
-                    <span className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{q}</span>
+                    <span className="font-bold text-category-geography">{i + 1}.</span>
+                    <span className="text-foreground/60 font-medium text-sm leading-relaxed">{q}</span>
                   </li>
                 ))}
               </ul>

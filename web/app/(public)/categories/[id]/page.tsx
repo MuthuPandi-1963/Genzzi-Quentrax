@@ -24,12 +24,12 @@ export default function CategoryDetailPage() {
   const params = useParams();
   
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className="min-h-screen  md:pt-24 pb-20 transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb & Back */}
         <div className="mb-8">
-          <Link href="/categories" className="inline-flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium hover:underline">
+          <Link href="/categories" className="inline-flex items-center gap-2 text-foreground font-medium hover:underline">
             <ArrowLeft className="w-4 h-4" />
             Back to Categories
           </Link>
@@ -39,17 +39,17 @@ export default function CategoryDetailPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden shadow-sm"
+          className=" border border-background rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden shadow-sm"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/20 to-transparent rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64  bg-linear-to-bl from-purple-500/20 to-transparent rounded-full blur-[80px] pointer-events-none" />
           
           <div className="flex items-center gap-4 mb-6 relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+            <div className="w-16 h-16 rounded-2xl text-category-arts bg-category-arts/10 flex items-center justify-center">
               <BookOpen className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-black">{mockCategory.name}</h1>
-              <p className="text-purple-600 dark:text-purple-400 font-medium">{mockCategory.topics.length} Topics Available</p>
+              <p className="text-category-arts font-medium">{mockCategory.topics.length} Topics Available</p>
             </div>
           </div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl relative z-10">
