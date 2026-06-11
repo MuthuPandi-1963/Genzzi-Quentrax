@@ -26,7 +26,6 @@ import {
   Target,
 } from "lucide-react";
 import { ParticleField } from "@/components/custom/ParticleField";
-import { useTheme } from "next-themes";
 
 const heroTaglines = [
   "Think Beyond Answers.",

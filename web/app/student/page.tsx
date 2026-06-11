@@ -36,13 +36,13 @@ export default function StudentDashboardPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden"
+        className="bg-linear-to-r from-purple-600 to-indigo-600 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
             <h1 className="text-3xl font-black mb-2">Welcome back, Alex! 👋</h1>
-            <p className="text-purple-100">You're on a 5-day streak. Keep it up!</p>
+            <p className="text-purple-100">You&lsquo;re on a 5-day streak. Keep it up!</p>
           </div>
           <Link href="/quizzes" className="shrink-0 bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors shadow-md flex items-center gap-2">
             <Play className="w-4 h-4 fill-current" />
@@ -124,8 +124,8 @@ export default function StudentDashboardPage() {
         <div className="space-y-8">
           <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white mb-6">Recent Activity</h3>
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-              {recentActivity.map((activity, i) => (
+            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+              {recentActivity.map((activity) => (
                 <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                   {/* Timeline dot */}
                   <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white dark:border-gray-900 bg-slate-100 dark:bg-gray-800 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">

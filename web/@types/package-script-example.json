@@ -1,6 +1,0 @@
-{
-  "scripts": {
-    "generate:types": "bash generate-types.sh",
-    "generate:types:watch": "nodemon --watch prisma/schema.prisma --exec 'bash generate-types.sh'"
-  }
-}
