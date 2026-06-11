@@ -1,8 +1,6 @@
 "use client";
 
 import SiteLogo from "../../components/SiteLogo";
-import PublicNavbar from "@/components/navigation/PublicNavbar";
-import PublicFooter from "@/components/footer/PubicFooter";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -247,8 +245,6 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
     />
   );
 }
-
-/* ─── Main component ────────────────────────────────────────── */
 
 export default function LandingPage() {
   const { resolvedTheme } = useTheme();
