@@ -11,11 +11,11 @@ import {
 import Link from "next/link";
 import SiteLogo from "../../../components/SiteLogo";
 
-/* ═══════════════════════════════════════════════════════════
+/*   
    QUENTRAX — REGISTER PAGE
    Split layout: animated SVG illustration left, form right
    Dark / Light theme · Framer Motion animations throughout
-   ═══════════════════════════════════════════════════════════ */
+      */
 
 /* ── password strength ─────────────────────────────────── */
 function getStrength(pw: string) {
@@ -35,10 +35,10 @@ function sr(n: number) {
   return x - Math.floor(x);
 }
 
-/* ══════════════════════════════════════════════════════════
+/*   
    ANIMATED ILLUSTRATION  (pure SVG + CSS animations)
    Represents: quiz cards, leaderboard, brain, score badges
-   ══════════════════════════════════════════════════════════ */
+      */
 function QuentraxIllustration({ isDark }: { isDark: boolean }) {
   const accent   = "hsl(263,70%,58%)";
   const accent2  = "hsl(330,80%,60%)";
@@ -321,9 +321,9 @@ function QuentraxIllustration({ isDark }: { isDark: boolean }) {
   );
 }
 
-/* ══════════════════════════════════════════════════════════
+/*   
    PASSWORD REQUIREMENT ROW
-   ══════════════════════════════════════════════════════════ */
+      */
 function Req({ met, label }: { met: boolean; label: string }) {
   return (
     <motion.div
@@ -345,9 +345,9 @@ function Req({ met, label }: { met: boolean; label: string }) {
   );
 }
 
-/* ══════════════════════════════════════════════════════════
+/*   
    MAIN PAGE
-   ══════════════════════════════════════════════════════════ */
+      */
 export default function RegisterPage() {
   const [theme, setTheme]           = useState<"dark"|"light">("dark");
   const [step, setStep]             = useState<1|2>(1);
@@ -479,7 +479,7 @@ export default function RegisterPage() {
         </Link>
       </motion.div>
 
-      {/* ══ SPLIT LAYOUT ══════════════════════════════════════ */}
+      {/*   SPLIT LAYOUT   */}
       <div className="min-h-screen flex flex-col lg:flex-row">
 
         {/* ── LEFT: Illustration panel ── */}

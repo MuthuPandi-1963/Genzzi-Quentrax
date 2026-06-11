@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   Menu,
   X,
   Sparkles,
-  BookOpen,
-  Trophy,
-  Grid3X3,
-  Layers,
   HelpCircle,
   LogIn,
   UserPlus,
-  Search,
-  Zap,
   Moon,
   Sun,
+  Monitor,
+  Grid3X3,
+  Layers,
+  BookOpen,
+  Trophy,
+  Zap,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -34,7 +34,7 @@ const useAuth = () => {
     setIsAuthenticated(!!mockUser);
   }, []);
 
-  return { user, isAuthenticated };
+  return { user, isAuthenticated, setUser, setIsAuthenticated };
 };
 
 const navLinks = [
@@ -42,12 +42,10 @@ const navLinks = [
   { href: "/categories", label: "Categories", icon: Grid3X3 },
   { href: "/topics", label: "Topics", icon: Layers },
   { href: "/quizzes", label: "Quizzes", icon: BookOpen },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  // { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/about", label: "About", icon: Zap },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
 ];
-
-/* ─── Mobile Nav Item ─────────────────────────────────────── */
 
 function MobileNavItem({
   link,
@@ -65,13 +63,12 @@ function MobileNavItem({
     <motion.button
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
         isActive
-          ? "bg-(--color-primary)/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20"
-          : "text-(--color-foreground-muted) hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+          ? "bg-primary/10 text-primary border border-primary/20"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       <Icon className="w-5 h-5" />
@@ -79,14 +76,12 @@ function MobileNavItem({
       {isActive && (
         <motion.div
           layoutId="mobileActiveIndicator"
-          className="ml-auto w-2 h-2 rounded-full bg-[var(--color-primary)]"
+          className="ml-auto w-2 h-2 rounded-full bg-primary"
         />
       )}
     </motion.button>
   );
 }
-
-/* ─── Desktop Nav Link ──────────────────────────────────── */
 
 function DesktopNavLink({
   link,
@@ -103,8 +98,8 @@ function DesktopNavLink({
       onClick={() => router.push(link.href)}
       className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
         isActive
-          ? "text-[var(--color-primary)]"
-          : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground"
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -114,7 +109,7 @@ function DesktopNavLink({
       {isActive && (
         <motion.div
           layoutId="desktopActiveIndicator"
-          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] rounded-full"
+          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
       )}
@@ -122,61 +117,80 @@ function DesktopNavLink({
   );
 }
 
-
-export default function Navbar() {
-  const {theme,setTheme,resolvedTheme} = useTheme()
-  console.log(theme);
-  
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const isDark  = resolvedTheme === 'dark';
-  const toggleTheme = ()=>{
-    setTheme((prev)=>prev=="light" ? "dark" : "light")
-  }
-
 export default function Navbar() {
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const mode = (theme as "dark" | "light" | "system") || "system";
-  const setMode = setTheme;
-  const isDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setUser, setIsAuthenticated } = useAuth();
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
 
->>>>>>>>> Temporary merge branch 2
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
+  // Handle click outside for theme menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        themeMenuRef.current &&
+        !themeMenuRef.current.contains(event.target as Node) &&
+        themeButtonRef.current &&
+        !themeButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowThemeMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const mode = mounted
+    ? ((theme as "dark" | "light" | "system") ?? "system")
+    : "system";
+  const isDark = mounted && resolvedTheme === "dark";
+
   const { scrollY } = useScroll();
-  const navBackground = useTransform(
+
+  // Dynamic backdrop filter based on scroll
+  const backdropFilter = useTransform(
     scrollY,
-    [0, 50],
-    isDark
-      ? ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]
-<<<<<<<<< Temporary merge branch 1
-      : ["rgba(255, 255, 255, 1)", "rgba(255, 255, 255, 0.85)"]
-=========
-      : ["rgba(248, 247, 252, 0)", "rgba(248, 247, 252, 0.85)"]
->>>>>>>>> Temporary merge branch 2
+    [0, 100],
+    ["blur(8px) saturate(1)", "blur(20px) saturate(1.2)"]
   );
-  const navBackdrop = useTransform(
-    scrollY,
-    [0, 50],
-    ["blur(0px)", "blur(20px) saturate(1.2)"]
+
+  // Dynamic background opacity based on scroll
+  const bgOpacity = useTransform(scrollY, [0, 100], [0.7, 0.95]);
+
+  // Background color with opacity
+  const backgroundColor = useTransform(
+    bgOpacity,
+    (opacity) =>
+      isDark
+        ? `rgba(17, 12, 28, ${opacity})`
+        : `rgba(248, 247, 252, ${opacity})`
   );
-  const navBorder = useTransform(
+
+  // Border color with opacity
+  const borderColor = useTransform(
     scrollY,
     [0, 50],
-    isDark
-      ? ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"]
-      : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.08)"]
+    [
+      isDark ? "rgba(255, 255, 255, 0)" : "rgba(26, 20, 41, 0)",
+      isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(26, 20, 41, 0.08)",
+    ]
   );
 
   useEffect(() => {
-    (async()=>{
-      setIsMobileMenuOpen(false)
-    })();
+    setIsMobileMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -191,17 +205,34 @@ export default function Navbar() {
     return pathname.startsWith(href);
   };
 
+  const ThemeIcon = {
+    dark: Moon,
+    light: Sun,
+    system: Monitor,
+  }[mode];
+
+  const handleLogout = () => {
+    // Replace with your actual logout logic
+    setUser(null);
+    setIsAuthenticated(false);
+    router.push("/");
+  };
+
   return (
     <>
       <motion.header
         style={{
-          backgroundColor: navBackground,
-          backdropFilter: navBackdrop,
-          borderBottomColor: navBorder,
+          backgroundColor,
+          borderBottomColor: borderColor,
+          backdropFilter,
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
         }}
-        className="fixed top-0 left-0 right-0 z-50 border-b"
+        transition={{ duration: 0.2 }}
+        className="border-b"
       >
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-[4.5rem]">
             {/* Logo */}
             <motion.div
@@ -210,39 +241,25 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-<<<<<<<<< Temporary merge branch 1
-              <div className="relative w-9 h-9 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent) flex items-center justify-center shadow-lg shadow-(--color-primary)/20">
-                <Sparkles className="w-5 h-5 relative z-10" />
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent)"
-=========
               <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
                 <Sparkles className="w-5 h-5 text-white relative z-10" />
                 <motion.div
                   className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-accent"
->>>>>>>>> Temporary merge branch 2
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
               <div className="flex flex-col">
-<<<<<<<<< Temporary merge branch 1
-                <p className="text-lg font-black  leading-tight tracking-tight">
-                  Quentrax
-                </p>
-                <span className="text-[10px] text-foreground-subtle leading-none tracking-wider uppercase">
-=========
                 <span className="text-lg font-black text-foreground leading-tight tracking-tight">
                   Quentrax
                 </span>
                 <span className="text-[10px] text-muted-foreground/70 leading-none tracking-wider uppercase">
->>>>>>>>> Temporary merge branch 2
                   by Genzzi
                 </span>
               </div>
             </motion.div>
 
-            {/* Desktop Nav */}
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
                 <DesktopNavLink
@@ -255,97 +272,149 @@ export default function Navbar() {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
-<<<<<<<<< Temporary merge branch 1
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="w-9 h-9 rounded-lg  flex items-center justify-center text-(--color-foreground-muted) hover:text-background dark:hover:text-foreground transition-colors"
-              >
-                <Search className="w-4 h-4" />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 180 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleTheme}
-                className="w-9 h-9 rounded-lg  flex items-center justify-center text-(--color-foreground-muted) hover:text-background dark:hover:text-foreground transition-colors"
-              >
-                <AnimatePresence mode="wait">
-                  {isDark ? (
-=========
               {/* Theme Picker */}
               <div className="relative">
                 <motion.button
+                  ref={themeButtonRef}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowThemeMenu(!showThemeMenu)}
                   className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Change theme"
                 >
                   <AnimatePresence mode="wait">
->>>>>>>>> Temporary merge branch 2
                     <motion.div
-                      key="moon"
+                      key={mode}
                       initial={{ rotate: -90, opacity: 0 }}
                       animate={{ rotate: 0, opacity: 1 }}
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Moon className="w-4 h-4" />
+                      <ThemeIcon className="w-4 h-4" />
                     </motion.div>
-                  ) : (
+                  </AnimatePresence>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showThemeMenu && (
                     <motion.div
-                      key="sun"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      ref={themeMenuRef}
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-12 w-40 bg-popover border border-border rounded-xl shadow-xl p-1 z-50"
                     >
-                      <Sun className="w-4 h-4" />
+                      {(
+                        [
+                          { value: "light" as const, label: "Light", icon: Sun },
+                          { value: "dark" as const, label: "Dark", icon: Moon },
+                          { value: "system" as const, label: "System", icon: Monitor },
+                        ] as const
+                      ).map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setTheme(option.value);
+                            setShowThemeMenu(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            mode === option.value
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <option.icon className="w-4 h-4" />
+                          {option.label}
+                        </button>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </div>
 
-              <div className="w-px h-6 bg-[var(--color-border)]" />
+              <div className="w-px h-6 bg-border" />
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => router.push("/login")}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors flex items-center gap-1.5"
-              >
-                <LogIn className="w-4 h-4" />
-                Login
-              </motion.button>
+              {/* Auth Buttons */}
+              {isAuthenticated ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push("/profile")}
+                  className="flex items-center gap-2"
+                  aria-label="Profile"
+                >
+                  {user?.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt={user.name || "User"}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary">
+                        {user?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                  )}
+                </motion.button>
+              ) : (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => router.push("/login")}
+                    className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Login
+                  </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/register")}
-                className="gradient-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5"
-              >
-                <UserPlus className="w-4 h-4" />
-                Get Started
-              </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => router.push("/signup")}
+                    className="bg-gradient-to-r from-primary to-accent px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 text-white shadow-md shadow-primary/25"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Get Started
+                  </motion.button>
+                </>
+              )}
             </div>
 
             {/* Mobile Actions */}
             <div className="flex lg:hidden items-center gap-2">
+              {/* Mobile Theme Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/login")}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] border border-[var(--color-border)]"
+                onClick={() => {
+                  const nextMode =
+                    mode === "light"
+                      ? "dark"
+                      : mode === "dark"
+                      ? "system"
+                      : "light";
+                  setTheme(nextMode);
+                }}
+                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
+                aria-label="Change theme"
               >
-                Login
+                {mode === "dark" && <Moon className="w-4 h-4" />}
+                {mode === "light" && <Sun className="w-4 h-4" />}
+                {mode === "system" && <Monitor className="w-4 h-4" />}
               </motion.button>
 
+              {/* Mobile Menu Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="w-10 h-10 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground)]"
+                className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
+                aria-label="Menu"
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
@@ -374,41 +443,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-
-        {/* Search Bar */}
-        <AnimatePresence>
-          {isSearchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden border-t border-[var(--color-border)]/50"
-            >
-              <div className="max-w-7xl mx-auto px-6 py-4">
-                <div className="relative max-w-2xl mx-auto">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-foreground-subtle)]" />
-                  <input
-                    type="text"
-                    placeholder="Search quizzes, topics, categories..."
-                    autoFocus
-                    className="glass-input pl-12 pr-4 py-3 w-full text-base"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        router.push(
-                          `/quizzes?search=${encodeURIComponent(
-                            (e.target as HTMLInputElement).value
-                          )}`
-                        );
-                        setIsSearchOpen(false);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.header>
 
       {/* Mobile Menu Overlay */}
@@ -429,71 +463,112 @@ export default function Navbar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.5 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-[var(--color-background-elevated)] border-l border-[var(--color-border)] z-50 lg:hidden flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[80vw] max-w-sm bg-background border-l border-border z-50 lg:hidden flex flex-col shadow-2xl"
             >
               {/* Menu Header */}
-              <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+              <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-bold text-[var(--color-foreground)]">
-                    Menu
-                  </span>
+                  <span className="font-bold text-foreground">Menu</span>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)]"
+                  className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
+                  aria-label="Close menu"
                 >
                   <X className="w-4 h-4" />
                 </motion.button>
               </div>
 
-              {/* Menu Links */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                <AnimatePresence>
-                  {navLinks.map((link, i) => (
-                    <MobileNavItem
-                      key={link.href}
-                      link={link}
-                      isActive={isActive(link.href)}
-                      onClick={() => router.push(link.href)}
-                      index={i}
+              {/* User Info (if authenticated) */}
+              {isAuthenticated && user && (
+                <div className="p-4 border-b border-border flex items-center gap-3">
+                  {user.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt={user.name || "User"}
+                      width={44}
+                      height={44}
+                      className="w-11 h-11 rounded-full object-cover"
                     />
-                  ))}
-                </AnimatePresence>
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg font-medium text-primary">
+                        {user.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-foreground">{user.name}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Links */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                {navLinks.map((link, i) => (
+                  <MobileNavItem
+                    key={link.href}
+                    link={link}
+                    isActive={isActive(link.href)}
+                    onClick={() => router.push(link.href)}
+                    index={i}
+                  />
+                ))}
               </div>
 
-              {/* Menu Footer */}
-              <div className="p-4 border-t border-[var(--color-border)] space-y-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push("/login")}
-                  className="w-full glass-card-sm px-4 py-3 rounded-xl text-[var(--color-foreground)] font-medium flex items-center justify-center gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push("/register")}
-                  className="w-full gradient-primary px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Get Started Free
-                </motion.button>
+              {/* Menu Footer - Auth Actions */}
+              <div className="p-4 border-t border-border space-y-3">
+                {isAuthenticated ? (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => router.push("/profile")}
+                      className="w-full border border-border px-4 py-3 rounded-xl text-foreground font-medium flex items-center justify-center gap-2"
+                    >
+                      Profile
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleLogout}
+                      className="w-full border border-destructive/20 px-4 py-3 rounded-xl text-destructive font-medium flex items-center justify-center gap-2"
+                    >
+                      Logout
+                    </motion.button>
+                  </>
+                ) : (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => router.push("/login")}
+                      className="w-full border border-border px-4 py-3 rounded-xl text-foreground font-medium flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Login
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => router.push("/signup")}
+                      className="w-full bg-gradient-to-r from-primary to-accent px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 text-white shadow-md shadow-primary/25"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Get Started
+                    </motion.button>
+                  </>
+                )}
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
-
-      {/* Spacer for fixed header */}
-      <div className="h-16 md:h-[4.5rem]" />
     </>
   );
 }

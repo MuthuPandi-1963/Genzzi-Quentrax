@@ -1,8 +1,6 @@
 "use client";
 
 import SiteLogo from "../../components/SiteLogo";
-import PublicNavbar from "@/components/navigation/PublicNavbar";
-import PublicFooter from "@/components/footer/PubicFooter";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import {
@@ -25,6 +23,7 @@ import {
   Target,
 } from "lucide-react";
 import { ParticleField } from "@/components/custom/ParticleField";
+import { useTheme } from "next-themes";
 
 const heroTaglines = [
   "Think Beyond Answers.",
@@ -251,8 +250,9 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
 /* ─── Main component ────────────────────────────────────────── */
 
 export default function LandingPage() {
-  const {resolvedTheme : theme, setTheme} = useTheme();
+  const {resolvedTheme } = useTheme();
   const [currentTagline, setCurrentTagline] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
@@ -267,7 +267,15 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const isDark = theme === "dark";
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+  if (!mounted) {
+  return null;
+}
+
 
   const bgImage = isDark
     ? `radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),
@@ -284,10 +292,10 @@ export default function LandingPage() {
         }`}
       style={{ backgroundImage: bgImage, backgroundAttachment: "fixed" }}
     >
-      <CursorOrb isDark={isDark} />
+      {mounted && <CursorOrb isDark={isDark} />}
 
 
-      {/* ══ HERO ════════════════════════════════════════════════ */}
+      {/*   HERO     */}
       <motion.section
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
@@ -503,7 +511,7 @@ export default function LandingPage() {
         </motion.div>
       </motion.section>
 
-      {/* ══ HOW IT WORKS ════════════════════════════════════════ */}
+      {/*   HOW IT WORKS   */}
       <section id="how-it-works" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -563,7 +571,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ CATEGORIES ══════════════════════════════════════════ */}
+      {/*   CATEGORIES   */}
       <section id="categories" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -627,7 +635,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ SECURITY / GENZZI ═══════════════════════════════════ */}
+      {/*   SECURITY / GENZZI   */}
       <section id="security" className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <motion.div
@@ -787,7 +795,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ FEATURES ════════════════════════════════════════════ */}
+      {/*   FEATURES   */}
       <section id="features" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -846,7 +854,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ TESTIMONIALS ════════════════════════════════════════ */}
+      {/*   TESTIMONIALS   */}
       <section id="testimonials" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -913,7 +921,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ CTA ═════════════════════════════════════════════════ */}
+      {/*   CTA    */}
       <section className="py-24 px-6">
         <motion.div
           className={`max-w-4xl mx-auto text-center ${isDark
