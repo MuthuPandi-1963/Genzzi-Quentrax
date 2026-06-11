@@ -70,13 +70,8 @@ function MobileNavItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
         isActive
-<<<<<<<<< Temporary merge branch 1
           ? "bg-(--color-primary)/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20"
           : "text-(--color-foreground-muted) hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
-=========
-          ? "bg-primary/10 text-primary border border-primary/20"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
->>>>>>>>> Temporary merge branch 2
       }`}
     >
       <Icon className="w-5 h-5" />
@@ -127,8 +122,6 @@ function DesktopNavLink({
   );
 }
 
-<<<<<<<<< Temporary merge branch 1
-/* ─── Main Navbar ─────────────────────────────────────────── */
 
 export default function Navbar() {
   const {theme,setTheme,resolvedTheme} = useTheme()
@@ -142,7 +135,7 @@ export default function Navbar() {
   const toggleTheme = ()=>{
     setTheme((prev)=>prev=="light" ? "dark" : "light")
   }
-=========
+
 export default function Navbar() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const mode = (theme as "dark" | "light" | "system") || "system";
