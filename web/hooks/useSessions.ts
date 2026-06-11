@@ -14,7 +14,7 @@ export const useSessions = () => {
   const deleteSession = useMutation({
     mutationFn: (id: string) => SessionAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries(["sessions"]);
     },
   });
 

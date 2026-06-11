@@ -1,41 +1,41 @@
-import AxiosInstance from "@/lib/axiosInstance";
+import axiosInstance from "@/lib/axiosInstance";
 
 const url = "auth";
 
 export const AuthAPI = {
   // Register new user
-  register: (data: any) => AxiosInstance.post(`/${url}/register`, data),
+  register: (data: any) => axiosInstance.post(`/${url}/register`, data),
 
   // Login
-  login: (data: any) => AxiosInstance.post(`/${url}/login`, data),
+  login: (data: any) => axiosInstance.post(`/${url}/login`, data),
 
   // Logout current session
-  logout: () => AxiosInstance.post(`/${url}/logout`),
+  logout: () => axiosInstance.post(`/${url}/logout`),
 
   // Logout all sessions
-  logoutAll: () => AxiosInstance.post(`/${url}/logout-all`),
+  logoutAll: () => axiosInstance.post(`/${url}/logout-all`),
 
   // Refresh access token
-  refresh: () => AxiosInstance.post(`/${url}/refresh`),
+  refresh: () => axiosInstance.post(`/${url}/refresh`),
 
   // Verify email
-  verifyEmail: (data: any) => AxiosInstance.post(`/${url}/verify-email`, data),
+  verifyEmail: (data: any) => axiosInstance.post(`/${url}/verify-email`, data),
 
   // Resend verification email
-  resendVerification: (data: any) => AxiosInstance.post(`/${url}/resend-verification`, data),
+  resendVerification: (data: any) => axiosInstance.post(`/${url}/resend-verification`, data),
 
   // Forgot password
-  forgotPassword: (data: any) => AxiosInstance.post(`/${url}/forgot-password`, data),
+  forgotPassword: (data: any) => axiosInstance.post(`/${url}/forgot-password`, data),
 
   // Reset password
-  resetPassword: (data: any) => AxiosInstance.post(`/${url}/reset-password`, data),
+  resetPassword: (data: any) => axiosInstance.post(`/${url}/reset-password`, data),
 
   // Setup MFA/TOTP
-  mfaSetup: () => AxiosInstance.post(`/${url}/mfa/setup`),
+  mfaSetup: () => axiosInstance.post(`/${url}/mfa/setup`),
 
   // Verify MFA setup
-  mfaVerifySetup: (data: any) => AxiosInstance.post(`/${url}/mfa/verify-setup`, data),
+  mfaVerifySetup: (data: any) => axiosInstance.post(`/${url}/mfa/verify-setup`, data),
 
   // Disable MFA
-  mfaDisable: (data: any) => AxiosInstance.post(`/${url}/mfa/disable`, data),
+  mfaDisable: (data: any) => axiosInstance.post(`/${url}/mfa/disable`, data),
 };

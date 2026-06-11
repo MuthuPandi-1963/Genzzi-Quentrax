@@ -2,134 +2,73 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as crypto from "crypto";
 import { PrismaService } from "../../database/prisma.service";
-import { ResponseEntity } from "../../common/responser/response.entity";
-import { ResponseSender } from "../../common/responser/response.sender";
+import { RedisService } from "../../database/redis.service";
 import { OAuthCallbackDto, UpdateProfileDto } from "./dto/auth.dto";
 import { ENV } from "../../config/env.Config";
 import { DeviceService } from "src/core/device/device.service";
-import { GenzziConfig } from "src/config/genzzi.config";
 import { type Request } from "express";
-
-// ── Introspection types ───────────────────────────────────────────────────────
+import { UserProfile } from "@prisma/client";
 
 export interface AuthenticatedUser {
+  userId: string;
+  authId: string;
+  role: string;
   sub: string;
-  client_id: string;
-  deviceId: string;
-  exp: number;
-  token_type: string;
-  scopes: string[];
-  username: string;
-  email: string;
-  phone: string | null;
-  full_name: string | null;
-  picture: string | null; // was avatar_url
 }
 
-interface IntrospectionData {
-  active: boolean;
-  token_type: string;
-  sub: string;
-  client_id: string;
-  deviceId: string;
-  exp: number;
-  scope: string;
-  profile: {
-    username: string;
-    email: string;
-    phone: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-}
-
-export interface IntrospectionResponse {
-  success: boolean;
-  message: string;
-  data: IntrospectionData;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+const REDIS_REFRESH_PREFIX = "rft-education:";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-    private deviceService: DeviceService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly redis: RedisService,
+    private readonly deviceService: DeviceService,
   ) {}
 
-  // ── Introspection ───────────────────────────────────────────────────────────
-
-  async introspect(rawCookie: string): Promise<IntrospectionResponse | null> {
-    try {
-      return await GenzziConfig.introspect(rawCookie);
-    } catch {
-      return null;
-    }
-  }
-
-  buildUser(data: IntrospectionData): AuthenticatedUser {
-    return {
-      sub: data.sub,
-      client_id: data.client_id,
-      deviceId: data.deviceId,
-      exp: data.exp,
-      token_type: data.token_type,
-      scopes: data.scope.split(" ").filter(Boolean),
-      username: data.profile.username,
-      email: data.profile.email,
-      phone: data.profile.phone,
-      full_name: data.profile.full_name,
-      picture: data.profile.avatar_url, // mapped → picture
-    };
-  }
-
-  // ── OAuth / tokens ──────────────────────────────────────────────────────────
+  // ── Login ───────────────────────────────────────────────────────────────────
 
   async oauthCallback(
     req: Request,
     dto: OAuthCallbackDto,
-    token: {
-      refreshToken: string;
-      accessToken: string;
-    },
-  ): Promise<ResponseEntity<any>> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     // 1. Upsert Auth identity
     const auth = await this.prisma.auth.upsert({
       where: { sub: dto.sub },
       update: {
         email: dto.email,
         username: dto.username,
-        picture: dto.picture,
-        phone: dto.phone,
+        picture: dto.picture ?? null,
+        phone: dto.phone ?? null,
       },
       create: {
         sub: dto.sub,
         email: dto.email,
         username: dto.username,
-        picture: dto.picture,
-        phone: dto.phone,
+        picture: dto.picture ?? null,
+        phone: dto.phone ?? null,
       },
     });
 
-    // 2. Lazy provision Mailbox
-    let mailbox = await this.prisma.mailbox.findUnique({
-      where: { auth_id: auth.id },
+    // 2. Upsert UserProfile
+    const profile = await this.prisma.userProfile.upsert({
+      where: { authId: auth.id },
+      update: {
+        name: dto.username,
+        avatar: dto.picture ?? null,
+      },
+      create: {
+        name: dto.username,
+        avatar: dto.picture ?? null,
+        authId: auth.id,
+      },
     });
-    if (!mailbox) {
-      mailbox = await this.prisma.mailbox.create({
-        data: {
-          auth_id: auth.id,
-          email: auth.email,
-          displayName: auth.username,
-        },
-      });
-    }
 
-    const deviceInfo = this.deviceService.buildDeviceInfo(req);
     // 3. Upsert DeviceInfo
-    const device = await this.prisma.deviceInfo.upsert({
+    const deviceInfo = this.deviceService.buildDeviceInfo(req);
+    await this.prisma.deviceInfo.upsert({
       where: { device_fingerprint: deviceInfo.fingerprint },
       update: {
         device_name: deviceInfo.browser,
@@ -150,104 +89,129 @@ export class AuthService {
     });
 
     // 4. Issue tokens
-    const accessJti = token.accessToken || crypto.randomUUID();
-    const refreshToken = token.refreshToken;
-
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
-
-    await this.prisma.sessionToken.create({
-      data: {
-        user_id: auth.id,
-        device_id: device.id,
-        access_jti: accessJti,
-        refresh_hash: refreshToken,
-        ip_address: deviceInfo.ip as string,
-        user_agent: deviceInfo.deviceType + deviceInfo.os,
-        expires_at: expiresAt,
-      },
-    });
-
-    const accessToken = this.jwtService.sign(
-      { sub: auth.id, deviceId: device.id, jti: accessJti },
-      { secret: ENV.JWT_SECRET, expiresIn: "15m" },
+    const accessToken = this.issueAccessToken(
+      auth.id,
+      profile.id,
+      profile.role,
     );
+    const refreshToken = this.generateRefreshToken();
 
-    return ResponseSender.success(
-      { accessToken, refreshToken, user: auth, mailbox },
-      "Authenticated successfully",
-    );
+    // 5. Store refresh token hash in Redis
+    await this.storeRefreshToken(auth.id, refreshToken);
+
+    return { accessToken, refreshToken };
   }
 
-  async refreshTokens(token: string): Promise<ResponseEntity<any>> {
-    const hash = crypto.createHash("sha256").update(token).digest("hex");
+  // ── Refresh ─────────────────────────────────────────────────────────────────
 
-    const session = await this.prisma.sessionToken.findFirst({
-      where: { refresh_hash: hash, revoked_at: null },
-      include: { user: true, device: true },
-    });
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    const hash = this.hashToken(refreshToken);
 
-    if (!session || new Date() > new Date(session.expires_at)) {
+    // Look up all keys for this hash — we store as rft-education:{authId}
+    // We need to find which authId owns this token
+    const authId = await this.redis.get(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
+    if (!authId) {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
 
-    // Rotate: mark old as replaced
-    const newAccessJti = crypto.randomUUID();
-    const newRefreshToken = crypto.randomBytes(32).toString("hex");
-    const newRefreshHash = crypto
-      .createHash("sha256")
-      .update(newRefreshToken)
-      .digest("hex");
-    const newExpires = new Date(Date.now() + 15 * 60 * 1000);
+    const stored = await this.redis.get(`${REDIS_REFRESH_PREFIX}${authId}`);
+    if (stored !== hash) {
+      throw new UnauthorizedException("Refresh token reuse detected");
+    }
 
-    await this.prisma.$transaction([
-      this.prisma.sessionToken.update({
-        where: { id: session.id },
-        data: { revoked_at: new Date(), replaced_by: newAccessJti },
-      }),
-      this.prisma.sessionToken.create({
-        data: {
-          user_id: session.user_id,
-          device_id: session.device_id,
-          access_jti: newAccessJti,
-          refresh_hash: newRefreshHash,
-          ip_address: session.ip_address,
-          user_agent: session.user_agent,
-          expires_at: newExpires,
-        },
-      }),
-    ]);
+    const auth = await this.prisma.auth.findUnique({
+      where: { id: authId },
+      include: { userProfile: true },
+    });
 
-    const accessToken = this.jwtService.sign(
-      { sub: session.user_id, deviceId: session.device_id, jti: newAccessJti },
-      { secret: ENV.JWT_SECRET, expiresIn: "15m" },
+    if (!auth || !auth?.userProfile) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const profile = auth.userProfile as UserProfile;
+
+    // Rotate refresh token
+    await this.redis.del(`${REDIS_REFRESH_PREFIX}${authId}`);
+    await this.redis.del(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
+
+    const newRefreshToken = this.generateRefreshToken();
+    await this.storeRefreshToken(authId, newRefreshToken);
+
+    const accessToken = this.issueAccessToken(authId, profile.id, profile.role);
+
+    return { accessToken };
+  }
+
+  // ── Logout ──────────────────────────────────────────────────────────────────
+
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) return;
+    const hash = this.hashToken(refreshToken);
+    const authId = await this.redis.get(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
+    if (authId) {
+      await this.redis.del(`${REDIS_REFRESH_PREFIX}${authId}`);
+      await this.redis.del(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
+    }
+  }
+
+  // ── Profile ─────────────────────────────────────────────────────────────────
+
+  async getProfile(authId: string) {
+    return this.prisma.auth.findUnique({
+      where: { id: authId },
+      include: { userProfile: true },
+    });
+  }
+
+  async updateProfile(authId: string, dto: UpdateProfileDto) {
+    return this.prisma.userProfile.update({
+      where: { authId: authId },
+      data: {
+        name: dto.username,
+        avatar: dto.picture,
+      },
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  private issueAccessToken(
+    authId: string,
+    profileId: string,
+    role: string,
+  ): string {
+    return this.jwtService.sign(
+      { sub: authId, authId, profileId, role },
+      { secret: ENV.ACCESS_SECRET, expiresIn: "15m" },
     );
+  }
 
-    return ResponseSender.success(
-      { accessToken, refreshToken: newRefreshToken },
-      "Tokens rotated successfully",
+  private generateRefreshToken(): string {
+    return crypto.randomBytes(40).toString("hex");
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
+  }
+
+  private async storeRefreshToken(
+    authId: string,
+    refreshToken: string,
+  ): Promise<void> {
+    const hash = this.hashToken(refreshToken);
+    // Store hash by authId (for lookup during refresh)
+    await this.redis.set(
+      `${REDIS_REFRESH_PREFIX}${authId}`,
+      hash,
+      REFRESH_TTL_SECONDS,
     );
-  }
-
-  async logout(accessJti: string): Promise<ResponseEntity<null>> {
-    await this.prisma.sessionToken.updateMany({
-      where: { access_jti: accessJti },
-      data: { revoked_at: new Date() },
-    });
-    return ResponseSender.success(null, "Logged out successfully");
-  }
-
-  async getProfile(userId: string) {
-    const profileData = await this.prisma.auth.findFirst({
-      where: { sub: userId },
-      include: { mailbox: true },
-    });
-    return profileData;
-  }
-
-  async updateProfile(userId: string, dto: UpdateProfileDto) {
-    return this.prisma.auth.update({
-      where: { id: userId },
-      data: dto,
-    });
+    // Store authId by hash (for reverse lookup)
+    await this.redis.set(
+      `${REDIS_REFRESH_PREFIX}hash:${hash}`,
+      authId,
+      REFRESH_TTL_SECONDS,
+    );
   }
 }

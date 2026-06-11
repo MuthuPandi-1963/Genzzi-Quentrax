@@ -1,4 +1,4 @@
-import AxiosInstance from "@/lib/axiosInstance";
+import AxiosInstance from "./axiosInstance.js";
 
 const url = "sessions";
 

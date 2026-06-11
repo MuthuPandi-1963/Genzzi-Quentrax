@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   Menu,
@@ -19,15 +18,15 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import { usePathname ,useRouter} from "next/navigation";
 
-// Mock user data - replace with your actual auth logic
 const useAuth = () => {
   const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Replace with your real auth check
-    const mockUser = null; // Set to { name: "John", avatar: "/avatar.jpg" } to test logged in state
+ 
+    const mockUser = null; 
     setUser(mockUser);
     setIsAuthenticated(!!mockUser);
   }, []);

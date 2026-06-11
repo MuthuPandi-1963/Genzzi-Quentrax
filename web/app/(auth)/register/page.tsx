@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
-import { useTheme } from "next-themes";
 import {
   Eye, EyeOff, Mail, Lock, User, ArrowRight,
   Fingerprint, Shield, Sparkles, Loader2, AlertCircle,
@@ -350,7 +349,7 @@ function Req({ met, label }: { met: boolean; label: string }) {
    MAIN PAGE
    ══════════════════════════════════════════════════════════ */
 export default function RegisterPage() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const [theme, setTheme]           = useState<"dark"|"light">("dark");
   const [step, setStep]             = useState<1|2>(1);
   const [name, setName]             = useState("");
   const [email, setEmail]           = useState("");
@@ -365,7 +364,7 @@ export default function RegisterPage() {
   const [username, setUsername]     = useState("");
   const [role, setRole]             = useState<"learner"|"educator"|"">(""); 
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = theme === "dark";
   const strength = getStrength(password);
   const pwMatch  = confirm.length > 0 && password === confirm;
 
@@ -452,7 +451,7 @@ export default function RegisterPage() {
 
       {/* theme toggle */}
       <motion.button
-        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        onClick={() => setTheme(t => t==="dark"?"light":"dark")}
         className={`fixed top-6 right-6 z-50 p-3 rounded-xl border transition-all ${
           isDark
             ? "bg-white/10 hover:bg-white/20 text-white border-white/10"

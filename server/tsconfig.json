@@ -15,16 +15,16 @@
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
+    "strict": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "lib": ["ES2020"],
     "paths": {
       "src/*": ["./src/*"],
       "@/*": ["./src/*"]
-    },
-    "types": ["node", "express", "multer"]
+    }
   }
-  }
+}

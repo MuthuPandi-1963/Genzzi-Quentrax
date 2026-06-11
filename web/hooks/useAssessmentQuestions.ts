@@ -38,28 +38,28 @@ export const useAssessmentQuestions = () => {
   const create = useMutation({
     mutationFn: AssessmentQuestionAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-questions"] });
+      queryClient.invalidateQueries(["assessment-questions"]);
     },
   });
 
   const createMany = useMutation({
     mutationFn: AssessmentQuestionAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-questions"] });
+      queryClient.invalidateQueries(["assessment-questions"]);
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => AssessmentQuestionAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-questions"] });
+      queryClient.invalidateQueries(["assessment-questions"]);
     },
   });
 
   const deleteLink = useMutation({
     mutationFn: (id: string) => AssessmentQuestionAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-questions"] });
+      queryClient.invalidateQueries(["assessment-questions"]);
     },
   });
 

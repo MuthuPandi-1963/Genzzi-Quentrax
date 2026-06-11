@@ -38,28 +38,28 @@ export const useAssessmentAttempts = () => {
   const create = useMutation({
     mutationFn: AssessmentAttemptAPI.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-attempts"] });
+      queryClient.invalidateQueries(["assessment-attempts"]);
     },
   });
 
   const createMany = useMutation({
     mutationFn: AssessmentAttemptAPI.createMany,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-attempts"] });
+      queryClient.invalidateQueries(["assessment-attempts"]);
     },
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => AssessmentAttemptAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-attempts"] });
+      queryClient.invalidateQueries(["assessment-attempts"]);
     },
   });
 
   const deleteAttempt = useMutation({
     mutationFn: (id: string) => AssessmentAttemptAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assessment-attempts"] });
+      queryClient.invalidateQueries(["assessment-attempts"]);
     },
   });
 

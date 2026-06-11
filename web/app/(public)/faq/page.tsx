@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -547,3 +548,5 @@ export default function FAQPage() {
     </main>
   );
 }
+=======
+>>>>>>> e8b550a1cc2376de62fd523c2ee8c78067e28674

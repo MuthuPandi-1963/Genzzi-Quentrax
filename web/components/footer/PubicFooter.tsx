@@ -3,14 +3,16 @@
 import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
 import SiteLogo from "../SiteLogo";
+import { useTheme } from "next-themes";
 
-interface FooterProps {
-  isDark: boolean;
-}
 
-export default function Footer({ isDark }: FooterProps) {
+export default function Footer() {
+  const {resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark";
+  console.log(resolvedTheme,isDark);
+  
   return (
-    <footer className={`border-t ${isDark ? "border-white/10" : "border-black/5"} py-16 px-6`}>
+    <footer className={`${isDark ? 'bg-black' : 'bg-white' } border-t ${isDark ? "border-white/10" : "border-black/5"} py-16 px-6`}>
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
