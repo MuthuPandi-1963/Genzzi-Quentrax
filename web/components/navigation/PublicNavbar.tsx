@@ -1,25 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   Menu,
   X,
   Sparkles,
-  BookOpen,
-  Trophy,
-  Grid3X3,
-  Layers,
   HelpCircle,
-  LogIn,
   UserPlus,
   Moon,
   Sun,
+  Monitor,
+  Grid3X3,
+  Layers,
+  BookOpen,
+  Zap,
+  Mail,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-
+import {Button as GenzziButton} from '@genzzi/oauth-client'
+import { usePathname, useRouter } from "next/navigation";
 // Mock user data - replace with your actual auth logic
 const useAuth = () => {
   const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
@@ -40,7 +41,7 @@ const navLinks = [
   { href: "/categories", label: "Categories", icon: Grid3X3 },
   { href: "/topics", label: "Topics", icon: Layers },
   { href: "/quizzes", label: "Quizzes", icon: BookOpen },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  // { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/about", label: "About", icon: Zap },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
   { href: "/contact", label: "Contact", icon: Mail },
@@ -108,7 +109,7 @@ function DesktopNavLink({
       {isActive && (
         <motion.div
           layoutId="desktopActiveIndicator"
-          className="absolute -bottom-1 left-2 right-2 h-0.5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] rounded-full"
+          className="absolute -bottom-1 left-2 right-2 h-0.5  bg-linear-to-r from-primary to-accent rounded-full"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
       )}
@@ -123,9 +124,42 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setUser, setIsAuthenticated } = useAuth();
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
+  const handleLogout  = ()=>{}
 
->>>>>>>>> Temporary merge branch 2
+  const client_id = process.env.NEXT_PUBLIC_GENZZI_CLIENT_ID;
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
+  // Handle click outside for theme menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        themeMenuRef.current &&
+        !themeMenuRef.current.contains(event.target as Node) &&
+        themeButtonRef.current &&
+        !themeButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowThemeMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const mode = mounted
+    ? ((theme as "dark" | "light" | "system") ?? "system")
+    : "system";
+  const isDark = mounted && resolvedTheme === "dark";
+
   const { scrollY } = useScroll();
 
   // Dynamic backdrop filter based on scroll
@@ -134,23 +168,28 @@ export default function Navbar() {
     [0, 50],
     isDark
       ? ["rgba(17, 12, 28, 0)", "rgba(17, 12, 28, 0.85)"]
-<<<<<<<<< Temporary merge branch 1
-      : ["rgba(255, 255, 255, 1)", "rgba(255, 255, 255, 0.85)"]
-=========
       : ["rgba(248, 247, 252, 0)", "rgba(248, 247, 252, 0.85)"]
->>>>>>>>> Temporary merge branch 2
   );
-  const navBackdrop = useTransform(
-    scrollY,
-    [0, 50],
-    ["blur(0px)", "blur(20px) saturate(1.2)"]
+
+  // Dynamic background opacity based on scroll
+  const bgOpacity = useTransform(scrollY, [0, 100], [0.7, 0.95]);
+
+  // Background color with opacity
+  const backgroundColor = useTransform(
+    bgOpacity,
+    (opacity) =>
+      isDark
+        ? `rgba(17, 12, 28, ${opacity})`
+        : `rgba(248, 247, 252, ${opacity})`
   );
-  const navBorder = useTransform(
+
+  // Border color with opacity
+  const borderColor = useTransform(
     scrollY,
     [0, 50],
     isDark
       ? ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"]
-      : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.08)"]
+      : ["rgba(26, 20, 41, 0)", "rgba(26, 20, 41, 0.08)"]
   );
 
   useEffect(() => {
@@ -169,6 +208,12 @@ export default function Navbar() {
     return pathname.startsWith(href);
   };
 
+  const ThemeIcon = {
+    dark: Moon,
+    light: Sun,
+    system: Monitor,
+  }[mode];
+
   return (
     <>
       <motion.header
@@ -180,7 +225,7 @@ export default function Navbar() {
           top: 0,
           zIndex: 50,
         }}
-        className="fixed top-0 left-0 right-0 z-50 border-b"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-border/50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-18">
@@ -191,17 +236,10 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-<<<<<<<<< Temporary merge branch 1
-              <div className="relative w-9 h-9 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent) flex items-center justify-center shadow-lg shadow-(--color-primary)/20">
-                <Sparkles className="w-5 h-5 relative z-10" />
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-accent)"
-=========
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="relative w-9 h-9 rounded-xl  bg-linear-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
                 <Sparkles className="w-5 h-5 text-white relative z-10" />
                 <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-accent"
->>>>>>>>> Temporary merge branch 2
+                  className="absolute inset-0 rounded-xl  bg-linear-to-br from-primary to-accent"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -210,8 +248,7 @@ export default function Navbar() {
                 <span className="text-lg font-black text-foreground leading-tight tracking-tight">
                   Quentrax
                 </span>
-                <span className="text-[10px] text-muted-foreground/70 leading-none tracking-wider uppercase">
->>>>>>>>> Temporary merge branch 2
+                <span className="text-[10px] text-muted-foreground leading-none tracking-wider">
                   by Genzzi
                 </span>
               </div>
@@ -256,39 +293,80 @@ export default function Navbar() {
                 <AnimatePresence>
                   {showThemeMenu && (
                     <motion.div
-                      key="sun"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      ref={themeMenuRef}
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-12 w-40 bg-background border border-border rounded-xl shadow-xl p-1 z-50"
                     >
-                      <Sun className="w-4 h-4" />
+                      {(
+                        [
+                          { value: "light" as const, label: "Light", icon: Sun },
+                          { value: "dark" as const, label: "Dark", icon: Moon },
+                          { value: "system" as const, label: "System", icon: Monitor },
+                        ] as const
+                      ).map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setTheme(option.value);
+                            setShowThemeMenu(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            mode === option.value
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <option.icon className="w-4 h-4" />
+                          {option.label}
+                        </button>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </div>
 
-              <div className="w-px h-6 bg-[var(--color-border)]" />
+              <div className="w-px h-6 bg-border" />
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => router.push("/login")}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] transition-colors flex items-center gap-1.5"
-              >
-                <LogIn className="w-4 h-4" />
-                Login
-              </motion.button>
+              {/* Auth Buttons */}
+              {isAuthenticated ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push("/profile")}
+                  className="flex items-center gap-2"
+                  aria-label="Profile"
+                >
+                  {user?.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt={user.name || "User"}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary">
+                        {user?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                  )}
+                </motion.button>
+              ) : (
+                <>
+                    <GenzziButton 
+                    variant={`${isDark ? 'dark' : "light"}`}
+                    oauthConfig={{
+                      client_id: client_id ?? "assdfrerefvfg"
+                    }}>
 
-              <motion.button
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/register")}
-                className="gradient-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5"
-              >
-                <UserPlus className="w-4 h-4" />
-                Get Started
-              </motion.button>
+                      Sign With Genzzi
+                    </GenzziButton>
+                </>
+              )}
             </div>
 
             {/* Mobile Actions */}
@@ -297,10 +375,21 @@ export default function Navbar() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/login")}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--color-foreground-muted)] border border-[var(--color-border)]"
+                onClick={() => {
+                  const nextMode =
+                    mode === "light"
+                      ? "dark"
+                      : mode === "dark"
+                      ? "system"
+                      : "light";
+                  setTheme(nextMode);
+                }}
+                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
+                aria-label="Change theme"
               >
-                Login
+                {mode === "dark" && <Moon className="w-4 h-4" />}
+                {mode === "light" && <Sun className="w-4 h-4" />}
+                {mode === "system" && <Monitor className="w-4 h-4" />}
               </motion.button>
 
               {/* Mobile Menu Button */}
@@ -308,7 +397,8 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="w-10 h-10 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground)]"
+                className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
+                aria-label="Menu"
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
@@ -362,7 +452,7 @@ export default function Navbar() {
               {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg  bg-linear-to-br from-primary to-accent flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <span className="font-bold text-foreground">Menu</span>
@@ -371,7 +461,8 @@ export default function Navbar() {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-lg bg-[var(--color-muted)] flex items-center justify-center text-[var(--color-foreground-muted)]"
+                  className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
+                  aria-label="Close menu"
                 >
                   <X className="w-4 h-4" />
                 </motion.button>
@@ -414,26 +505,37 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Menu Footer */}
-              <div className="p-4 border-t border-[var(--color-border)] space-y-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push("/login")}
-                  className="w-full glass-card-sm px-4 py-3 rounded-xl text-[var(--color-foreground)] font-medium flex items-center justify-center gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push("/register")}
-                  className="w-full gradient-primary px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Get Started Free
-                </motion.button>
+              {/* Menu Footer - Auth Actions */}
+              <div className="p-4 border-t border-border space-y-3 w-full">
+                {isAuthenticated ? (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => router.push("/profile")}
+                      className="w-full border border-border px-4 py-3 rounded-xl text-foreground font-medium flex items-center justify-center gap-2"
+                    >
+                      Profile
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleLogout}
+                      className="w-full border border-destructive/20 px-4 py-3 rounded-xl text-destructive font-medium flex items-center justify-center gap-2"
+                    >
+                      Logout
+                    </motion.button>
+                  </>
+                ) : (
+                  <>
+                      <GenzziButton className="w-full float-end" oauthConfig={{
+                      client_id: client_id ?? "sdfwr3re3refgefg"
+                    }}>
+
+                      Sign With Genzzi
+                    </GenzziButton>
+                  </>
+                )}
               </div>
             </motion.div>
           </>
