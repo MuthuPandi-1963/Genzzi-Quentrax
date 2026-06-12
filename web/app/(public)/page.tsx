@@ -23,6 +23,7 @@ import {
   Target,
 } from "lucide-react";
 import { ParticleField } from "@/components/custom/ParticleField";
+import { useTheme } from "next-themes";
 
 const heroTaglines = [
   "Think Beyond Answers.",
@@ -110,12 +111,7 @@ const testimonials = [
   },
 ];
 
-/* ─── Helpers ───────────────────────────────────────────────── */
 
-function seededRand(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
 
 /* ─── Sub-components ────────────────────────────────────────── */
 
@@ -247,8 +243,9 @@ function CursorOrb({ isDark }: { isDark: boolean }) {
 }
 
 export default function LandingPage() {
-  const {resolvedTheme : theme, setTheme} = useTheme();
+  const {resolvedTheme } = useTheme();
   const [currentTagline, setCurrentTagline] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
@@ -263,7 +260,15 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const isDark = theme === "dark";
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+  if (!mounted) {
+  return null;
+}
+
 
   const bgImage = isDark
     ? `radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),
@@ -280,10 +285,10 @@ export default function LandingPage() {
         }`}
       style={{ backgroundImage: bgImage, backgroundAttachment: "fixed" }}
     >
-      <CursorOrb isDark={isDark} />
+      {mounted && <CursorOrb isDark={isDark} />}
 
 
-      {/* ══ HERO ════════════════════════════════════════════════ */}
+      {/*   HERO     */}
       <motion.section
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
@@ -303,7 +308,7 @@ export default function LandingPage() {
         <ParticleField/>
 
         <motion.div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-175 h-175 rounded-full"
           style={{
             background: isDark
               ? "radial-gradient(circle, hsl(263 70% 40% / 0.28) 0%, transparent 70%)"
@@ -499,7 +504,7 @@ export default function LandingPage() {
         </motion.div>
       </motion.section>
 
-      {/* ══ HOW IT WORKS ════════════════════════════════════════ */}
+      {/*   HOW IT WORKS   */}
       <section id="how-it-works" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -517,7 +522,7 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px bg-gradient-to-r from-transparent via-[hsl(263,70%,58%)]/40 to-transparent" />
+            <div className="hidden md:block absolute top-1/2 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-px  bg-linear-to-r from-transparent via-[hsl(263,70%,58%)]/40 to-transparent" />
 
             {howItWorks.map((item, i) => (
               <SpotlightCard
@@ -559,7 +564,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ CATEGORIES ══════════════════════════════════════════ */}
+      {/*   CATEGORIES   */}
       <section id="categories" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -623,7 +628,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ SECURITY / GENZZI ═══════════════════════════════════ */}
+      {/*   SECURITY / GENZZI   */}
       <section id="security" className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <motion.div
@@ -684,7 +689,7 @@ export default function LandingPage() {
                   className="flex items-start gap-5 w-full"
                 >
                   <motion.div
-                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center flex-shrink-0`}
+                    className={`w-14 h-14 rounded-2xl  bg-linear-to-br ${feature.color} flex items-center justify-center flex-shrink-0`}
                     whileHover={{ scale: 1.15, rotate: 8 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
@@ -783,7 +788,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ FEATURES ════════════════════════════════════════════ */}
+      {/*   FEATURES   */}
       <section id="features" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -842,7 +847,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ TESTIMONIALS ════════════════════════════════════════ */}
+      {/*   TESTIMONIALS   */}
       <section id="testimonials" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -891,7 +896,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex items-center gap-3">
                   <motion.div
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white"
+                    className="w-10 h-10 rounded-full  bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white"
                     whileHover={{ scale: 1.2 }}
                   >
                     {t.avatar}
@@ -909,7 +914,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ CTA ═════════════════════════════════════════════════ */}
+      {/*   CTA    */}
       <section className="py-24 px-6">
         <motion.div
           className={`max-w-4xl mx-auto text-center ${isDark

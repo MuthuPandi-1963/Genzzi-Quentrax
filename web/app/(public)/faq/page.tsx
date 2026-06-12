@@ -1,6 +1,6 @@
-<<<<<<< HEAD
 "use client";
 import React, { useState } from 'react';
+
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
   ChevronDown, 
@@ -8,7 +8,6 @@ import {
   HelpCircle, 
   MessageCircle, 
   Mail, 
-  Phone, 
   BookOpen,
   Sparkles,
   Users,
@@ -18,15 +17,10 @@ import {
   Shield,
   CreditCard,
   Globe,
-  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 
-// Animation variants
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
-};
+
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -75,7 +69,7 @@ const FAQAccordion = ({ item, isOpen, onToggle, index }: {
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
-          className="flex-shrink-0"
+          className="shrink-0"
         >
           <ChevronDown className="w-5 h-5 text-muted-foreground" />
         </motion.div>
@@ -121,7 +115,7 @@ const CategoryButton = ({
     onClick={onClick}
     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
       isActive 
-        ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/25" 
+        ? "bg-linear-to-r from-primary to-accent text-white shadow-lg shadow-primary/25" 
         : "bg-muted text-muted-foreground hover:text-foreground border border-border"
     }`}
   >
@@ -143,7 +137,7 @@ const HelpCard = ({ title, description, icon: Icon, buttonText, link }: {
     whileHover={{ y: -5 }}
     className="bg-card rounded-2xl p-6 text-center border border-border hover:border-primary/30 transition-all duration-300"
   >
-    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-4">
+    <div className="w-14 h-14 rounded-xl bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-4">
       <Icon className="w-7 h-7 text-primary" />
     </div>
     <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
@@ -342,7 +336,7 @@ export default function FAQPage() {
   return (
     <main className="bg-background min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 pt-20 pb-12 md:pt-24 md:pb-16">
+      <section className="relative overflow-hidden bg-linear-to-br from-primary/5 via-background to-accent/5 pt-20 pb-12 md:pt-24 md:pb-16">
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
@@ -369,7 +363,7 @@ export default function FAQPage() {
             className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground"
           >
             How Can We{' '}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
               Help You?
             </span>
           </motion.h1>
@@ -473,7 +467,7 @@ export default function FAQPage() {
       </section>
 
       {/* Still Need Help Section */}
-      <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <section className="py-16 bg-linear-to-br from-primary/5 via-background to-accent/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -485,7 +479,7 @@ export default function FAQPage() {
               Still Need Help?
             </h2>
             <p className="mt-2 text-muted-foreground">
-              Can't find what you're looking for? Reach out to our support team
+              Can&apos;t find what you&apos;re looking for? Reach out to our support team
             </p>
           </motion.div>
           
@@ -522,7 +516,7 @@ export default function FAQPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-primary to-accent">
+      <section className="py-16 bg-linear-to-r from-primary to-accent">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -548,5 +542,3 @@ export default function FAQPage() {
     </main>
   );
 }
-=======
->>>>>>> e8b550a1cc2376de62fd523c2ee8c78067e28674

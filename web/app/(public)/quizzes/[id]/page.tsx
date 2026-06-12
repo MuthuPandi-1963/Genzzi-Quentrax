@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React from "react";
@@ -30,12 +31,12 @@ export default function QuizDetailPage() {
   const params = useParams();
   
   return (
-    <div className="min-h-screen bg-[hsl(260,20%,98%)] dark:bg-[hsl(260,50%,4%)] text-gray-900 dark:text-gray-100 pt-24 pb-20 transition-colors duration-500">
+    <div className="min-h-screen  pt-24 pb-20 transition-colors duration-500">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb & Back */}
         <div className="mb-8">
-          <Link href="/quizzes" className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+          <Link href="/quizzes" className="inline-flex items-center gap-2 font-medium hover:underline">
             <ArrowLeft className="w-4 h-4" />
             Back to Quizzes
           </Link>
@@ -47,10 +48,10 @@ export default function QuizDetailPage() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl p-8 md:p-12 shadow-sm"
+              className="bg-background rounded-3xl p-8 md:p-12 shadow-sm"
             >
               <div className="flex items-center gap-2 mb-6">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-category-geography/10 text-category-geography">
                   {mockQuiz.topic.name}
                 </span>
               </div>
@@ -89,7 +90,7 @@ export default function QuizDetailPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 p-[2px]">
+                  <div className="w-10 h-10 rounded-full  bg-linear-to-tr from-emerald-500 to-teal-500 p-0.5">
                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${mockQuiz.creator.profile.name}`} alt="Avatar" className="w-full h-full rounded-full bg-white dark:bg-gray-900" />
                   </div>
                   <div>
@@ -117,10 +118,10 @@ export default function QuizDetailPage() {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-emerald-600 dark:bg-emerald-900/40 border border-emerald-500/50 rounded-3xl p-8 text-white text-center"
+              className="bg-category-sports rounded-3xl p-8 text-center"
             >
               <h3 className="text-2xl font-bold mb-2">Ready to Start?</h3>
-              <p className="text-emerald-100 mb-6 text-sm">You must be logged in to take this quiz and record your score.</p>
+              <p className=" mb-6 text-sm">You must be logged in to take this quiz and record your score.</p>
               
               <Link href="/login" className="block w-full py-4 bg-white text-emerald-900 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-lg">
                 Login to Take Quiz
@@ -140,11 +141,11 @@ export default function QuizDetailPage() {
               
               <div className="space-y-3">
                 {mockLeaderboard.map((entry, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20">
+                  <div key={i} className="flex items-center justify-between px-6 py-3 rounded bg-foreground/10">
                     <div className="flex items-center gap-3">
-                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
-                        i === 0 ? "bg-amber-100 text-amber-700" :
-                        i === 1 ? "bg-gray-200 text-gray-700" :
+                      <span className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold ${
+                        i === 0 ? "bg-orange-300 " :
+                        i === 1 ? "bg-category-science" :
                         i === 2 ? "bg-orange-100 text-orange-800" : "bg-transparent text-gray-500"
                       }`}>
                         {entry.rank}
@@ -152,7 +153,7 @@ export default function QuizDetailPage() {
                       <span className="font-medium text-sm">{entry.name}</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{entry.score} pts</div>
+                      <div className="font-bold text-sm text-category-sports">{entry.score} pts</div>
                       <div className="text-xs text-gray-500">{entry.time}</div>
                     </div>
                   </div>

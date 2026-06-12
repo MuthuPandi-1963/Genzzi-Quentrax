@@ -14,7 +14,7 @@ export function QueryProvider({ children }: ReactQueryProviderProps) {
     <QueryClientProvider client={queryClient}>
       {children}
       {process.env.NODE_ENV === "development" && (
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools initialIsOpen={process.env.NEXT_PUBLIC_NODE_ENV == "dev"} />
       )}
     </QueryClientProvider>
   );

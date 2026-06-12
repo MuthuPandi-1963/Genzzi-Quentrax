@@ -26,20 +26,20 @@ export default function QuizCard({ quiz, showStatus = false, actionText = "Start
   
   return (
     <motion.div 
-      className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
+      className="cursor-pointer bg-background/70 border border-foreground/10  rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
       whileHover={{ y: -4, scale: 1.01 }}
     >
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4 gap-2">
           {quiz.topic && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-category-sports/30 text-foreground/90">
               {quiz.topic.name}
             </span>
           )}
           {showStatus && <StatusBadge status={quiz.status} />}
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+        <h3 className=" text-xl font-bold  mb-2 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
           {quiz.title}
         </h3>
         
@@ -47,7 +47,7 @@ export default function QuizCard({ quiz, showStatus = false, actionText = "Start
           {quiz.description || "No description provided."}
         </p>
         
-        <div className="grid grid-cols-2 gap-4 mb-6 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-black/20 p-4 rounded-xl">
+        <div className="grid grid-cols-2 gap-4 mb-6 text-sm text-foreground shadow-sm shadow-border p-4 rounded-md">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-purple-500" />
             <span>{quiz.timeLimit ? `${quiz.timeLimit} mins` : 'No limit'}</span>

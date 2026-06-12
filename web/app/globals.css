@@ -1,14 +1,20 @@
 @import 'tailwindcss';
 
-/* ═══════════════════════════════════════════════════════════════
+/*   
    QUIZ APP — TAILWIND V4 GLOBAL THEME
    Color Theory: Deep Purple Space + Neon Accents + Glassmorphism
-   ═══════════════════════════════════════════════════════════════ */
+      */
 
 @theme {
   /* ─────────────────────────────────────────────────────────
      1. CORE SURFACE (Depth Hierarchy)
      ───────────────────────────────────────────────────────── */
+  --color-primary: hsl(263 70% 58%);
+  --color-accent: hsl(330 80% 60%);
+  --color-success: hsl(142 76% 45%);
+  --color-warning: hsl(38 92% 55%);
+  --color-error: hsl(0 84% 60%);
+  --color-info: hsl(217 90% 60%);
   --color-background: hsl(260 50% 4%);
   --color-background-elevated: hsl(260 45% 7%);
   --color-background-overlay: hsl(260 40% 10%);
@@ -316,26 +322,83 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/*   
    RAW CSS CUSTOM PROPERTIES (glassmorphism, shadows — not colors)
-   ═══════════════════════════════════════════════════════════════ */
+      */
 :root {
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --color-background:          hsl(260 30% 98%);
+  --color-background-elevated: hsl(260 20% 94%);
+  --color-background-overlay:  hsl(260 15% 90%);
+  --color-background-sunken:   hsl(260 25% 96%);
+  --color-foreground:          hsl(260 40% 10%);
+  --color-foreground-muted:    hsl(260 15% 40%);
+  --color-foreground-subtle:   hsl(260 10% 60%);
+
+  --color-card:                hsl(260 20% 94%);
+  --color-card-foreground:     hsl(260 40% 10%);
+  --color-secondary:           hsl(260 20% 88%);
+  --color-secondary-foreground: hsl(260 40% 10%);
+  --color-muted:               hsl(260 15% 88%);
+  --color-muted-foreground:    hsl(260 15% 40%);
+  --color-border:              hsl(260 20% 82%);
+  --color-input:               hsl(260 20% 92%);
+
+  --glass-border:        rgba(0, 0, 0, 0.08);
+  --glass-border-strong: rgba(0, 0, 0, 0.15);
+  --glass-surface:       rgba(255, 255, 255, 0.6);
+  --glass-surface-hover: rgba(255, 255, 255, 0.8);
+  --glass-surface-active: rgba(255, 255, 255, 0.9);
+  --glass-shadow-sm:  0 4px 16px -4px rgba(139, 92, 246, 0.10);
+  --glass-shadow:     0 8px 32px -4px rgba(139, 92, 246, 0.15);
+  --glass-shadow-lg:  0 16px 48px -8px rgba(139, 92, 246, 0.20);
+  --glass-shadow-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"],
+.dark {
+  --color-background:          hsl(260 50% 4%);
+  --color-background-elevated: hsl(260 45% 7%);
+  --color-background-overlay:  hsl(260 40% 10%);
+  --color-background-sunken:   hsl(260 55% 2%);
+  --color-foreground:          hsl(0 0% 100%);
+  --color-foreground-muted:    hsl(260 10% 64%);
+  --color-foreground-subtle:   hsl(260 10% 45%);
+
+  --color-card:                hsl(260 45% 7%);
+  --color-card-foreground:     hsl(0 0% 100%);
+  --color-secondary:           hsl(260 30% 14%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted:               hsl(260 20% 18%);
+  --color-muted-foreground:    hsl(260 10% 64%);
+  --color-border:              hsl(260 30% 20%);
+  --color-input:               hsl(260 30% 16%);
+
+  --glass-border:        rgba(255, 255, 255, 0.08);
   --glass-border-strong: rgba(255, 255, 255, 0.15);
-  --glass-surface: rgba(255, 255, 255, 0.03);
+  --glass-surface:       rgba(255, 255, 255, 0.03);
   --glass-surface-hover: rgba(255, 255, 255, 0.06);
   --glass-surface-active: rgba(255, 255, 255, 0.09);
-  --glass-backdrop: blur(24px) saturate(1.2);
-  --glass-backdrop-heavy: blur(40px) saturate(1.4);
-  --glass-shadow-sm: 0 4px 16px -4px rgba(139, 92, 246, 0.15);
-  --glass-shadow: 0 8px 32px -4px rgba(139, 92, 246, 0.2);
-  --glass-shadow-lg: 0 16px 48px -8px rgba(139, 92, 246, 0.3);
+  --glass-shadow-sm:  0 4px 16px -4px rgba(139, 92, 246, 0.15);
+  --glass-shadow:     0 8px 32px -4px rgba(139, 92, 246, 0.2);
+  --glass-shadow-lg:  0 16px 48px -8px rgba(139, 92, 246, 0.3);
   --glass-shadow-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
-/* ═══════════════════════════════════════════════════════════════
+:root {
+  --body-gradient:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 80% / 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 80%, hsl(330 80% 80% / 0.08), transparent);
+}
+
+[data-theme="dark"], .dark {
+  --body-gradient:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 80%, hsl(330 80% 30% / 0.15), transparent),
+    radial-gradient(ellipse 40% 60% at 20% 100%, hsl(217 90% 30% / 0.1), transparent);
+}
+/*   
    BASE STYLES
-   ═══════════════════════════════════════════════════════════════ */
+      */
 @layer base {
   * {
     border-color: var(--color-border);
@@ -366,9 +429,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/*   
    COMPONENTS
-   ═══════════════════════════════════════════════════════════════ */
+      */
 @layer components {
 
   /* ─── Glass Card System ─── */
@@ -712,9 +775,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/*   
    UTILITY CLASSES
-   ═══════════════════════════════════════════════════════════════ */
+      */
 @layer utilities {
 
   /* ─── Animation Utility Classes ─── */
@@ -760,23 +823,6 @@
   .stagger-children > *:nth-child(4) { animation-delay: var(--stagger-4); }
   .stagger-children > *:nth-child(5) { animation-delay: var(--stagger-5); }
   .stagger-children > *:nth-child(6) { animation-delay: var(--stagger-6); }
-
-  /* ─── Background Gradient Utilities ─── */
-  .bg-gradient-radial-purple {
-    background: radial-gradient(ellipse at top, hsl(263 70% 20% / 0.4), transparent 70%);
-  }
-  .bg-gradient-radial-pink {
-    background: radial-gradient(ellipse at bottom right, hsl(330 80% 25% / 0.3), transparent 70%);
-  }
-  .bg-gradient-radial-blue {
-    background: radial-gradient(ellipse at bottom left, hsl(217 90% 25% / 0.3), transparent 70%);
-  }
-  .bg-gradient-mesh {
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(263 70% 20% / 0.3), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 80%, hsl(330 80% 30% / 0.15), transparent),
-      radial-gradient(ellipse 40% 60% at 20% 100%, hsl(217 90% 30% / 0.1), transparent);
-  }
 
   /* ─── Backdrop Utilities ─── */
   .backdrop-blur-glass       { backdrop-filter: blur(24px) saturate(1.2); }
@@ -826,9 +872,4 @@
   background: var(--glass-surface);
   backdrop-filter: blur(40px) saturate(1.4);
   box-shadow: var(--glass-shadow-lg), var(--glass-shadow-inset);
-}
-
-/* ─── Radial Gradient Background Utility ─── */
-.bg-gradient-radial-purple {
-  background: radial-gradient(ellipse at top, hsl(263 70% 20% / 0.4), transparent 70%);
 }

@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <SiteLogo variantIndex={1} className="w-20 h-20 object-contain drop-shadow-xl rounded-2xl" />
         </div>
         <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-[hsl(263,70%,58%)]" />
+           <div className="absolute top-0 left-0 w-full h-1  bg-linear-to-r from-purple-500 to-[hsl(263,70%,58%)]" />
           {children}
         </div>
       </div>

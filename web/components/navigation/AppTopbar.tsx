@@ -18,11 +18,11 @@ export default function AppTopbar() {
 
       <div className="flex items-center gap-4 md:gap-6 ml-4">
         <motion.div 
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-500/20 border border-amber-500/30 px-4 py-1.5 rounded-full cursor-pointer"
+          className="flex items-center gap-2  bg-linear-to-r from-amber-400/20 to-orange-500/20 border border-amber-500/30 px-4 py-1.5 rounded-full cursor-pointer"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 flex items-center justify-center shadow-inner">
+          <div className="w-6 h-6 rounded-full  bg-linear-to-br from-yellow-300 to-amber-500 flex items-center justify-center shadow-inner">
             <Coins className="w-3.5 h-3.5 text-amber-900" />
           </div>
           <span className="font-bold text-amber-600 dark:text-amber-400">1,250</span>
@@ -40,7 +40,7 @@ export default function AppTopbar() {
             <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-purple-500 transition-colors">Alex Student</p>
             <p className="text-xs text-gray-500">Level 12</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-[2px]">
+          <div className="w-10 h-10 rounded-full  bg-linear-to-tr from-purple-500 to-pink-500 p-[2px]">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" alt="Avatar" className="w-full h-full rounded-full bg-white dark:bg-gray-900" />
           </div>
         </button>

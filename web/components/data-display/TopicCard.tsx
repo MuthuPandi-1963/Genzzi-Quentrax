@@ -15,17 +15,17 @@ interface TopicCardProps {
   };
 }
 
+export const diffColors = {
+  easy: "bg-green-600   text-background ",
+  medium: "bg-orange-500 text-background ",
+  hard: "bg-red-700 text-background",
+};
 export default function TopicCard({ topic }: TopicCardProps) {
-  const diffColors = {
-    easy: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-    medium: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-    hard: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800",
-  };
 
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
-      className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all relative flex flex-col h-full"
+      className=" border border-foreground/20 font-bold  rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all relative flex flex-col h-full"
     >
       <Link href={`/topics/${topic.id}`} className="absolute inset-0 z-10">
         <span className="sr-only">View {topic.name}</span>
@@ -33,16 +33,16 @@ export default function TopicCard({ topic }: TopicCardProps) {
 
       <div className="flex justify-between items-start mb-4">
         {topic.category && (
-          <span className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+          <span className="text-xs font-black uppercase tracking-wider text-category-geography">
             {topic.category.name}
           </span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-md font-medium border ${diffColors[topic.difficulty]}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-md font-bold ${diffColors[topic.difficulty]}`}>
           {topic.difficulty.charAt(0).toUpperCase() + topic.difficulty.slice(1)}
         </span>
       </div>
 
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
+      <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1">
         {topic.name}
       </h3>
 
@@ -53,12 +53,12 @@ export default function TopicCard({ topic }: TopicCardProps) {
       {topic.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-6">
           {topic.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="text-xs px-2 py-1 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-md">
+            <span key={tag} className="text-xs px-2 py-1 bg-foreground-subtle/30 text-foreground/60 rounded-md">
               #{tag}
             </span>
           ))}
           {topic.tags.length > 3 && (
-            <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-md">
+            <span className="text-xs px-2 py-1 bg-category-geography  rounded-md">
               +{topic.tags.length - 3}
             </span>
           )}
