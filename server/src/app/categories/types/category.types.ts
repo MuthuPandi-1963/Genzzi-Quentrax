@@ -1,3 +1,5 @@
+import { Topic } from "@prisma/client";
+
 export interface CategoryResponse {
   id: string;
   name: string;
@@ -5,6 +7,7 @@ export interface CategoryResponse {
   imageUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
+  topics?: Topic[];
 }
 
 export interface CategoryListResponse {

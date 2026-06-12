@@ -1,6 +1,5 @@
 export { AuthAPI } from './auth.js';
 export { UserAPI } from './users.js';
-export { SessionAPI } from './sessions.js';
 export { AuditLogAPI } from './audit-logs.js';
 export { CategoryAPI } from './categories.js';
 export { TopicAPI } from './topics.js';

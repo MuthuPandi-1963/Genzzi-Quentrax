@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import SiteLogo from "../../components/SiteLogo";
@@ -24,6 +25,8 @@ import {
 } from "lucide-react";
 import { ParticleField } from "@/components/custom/ParticleField";
 import { useTheme } from "next-themes";
+import { useCategories } from "@/hooks";
+import { Category } from "@/@types";
 
 const heroTaglines = [
   "Think Beyond Answers.",
@@ -246,12 +249,19 @@ export default function LandingPage() {
   const {resolvedTheme } = useTheme();
   const [currentTagline, setCurrentTagline] = useState(0);
   const [mounted, setMounted] = useState(false);
-
+  const {Categories,isLoading} = useCategories()
+  const [categories,setCategories] = useState<Category[]>();
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.12], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 0.12], [0, -60]);
 
+  useEffect(()=>{
+    (async()=>{
+      console.log(Categories);
+      setCategories(Categories)
+    })()
+  },[isLoading,Categories])
   useEffect(() => {
     const interval = setInterval(
       () => setCurrentTagline((p) => (p + 1) % heroTaglines.length),
@@ -581,11 +591,11 @@ useEffect(() => {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((cat, i) => (
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6">
+            {categories && categories.length > 0 ? categories.map((cat, i) => (
               <motion.a
                 key={cat.name}
-                href={`/categories/${cat.name.toLowerCase()}`}
+                href={`/categories/${cat.id}`}
                 className={`${isDark
                     ? "bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 hover:border-[hsl(263,70%,58%)]/40"
                     : "bg-white/80 backdrop-blur-xl rounded-3xl border border-black/5 shadow-lg hover:border-[hsl(263,70%,58%)]/30"
@@ -602,18 +612,13 @@ useEffect(() => {
                   whileHover={{ scale: 1.3, rotate: [-5, 5, -5, 0] }}
                   transition={{ duration: 0.4 }}
                 >
-                  {cat.icon}
+                  <img src={cat.imageUrl ?? ""} alt={cat.name} className="w-36 h-36 " />
                 </motion.span>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold">{cat.name}</h3>
-                  <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                    {cat.count} quizzes
+                  <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"} truncate overflow-hidden h-20 text-wrap`}>
+                    {cat.description}
                   </p>
-                </div>
-                <div
-                  className={`${cat.color} px-3 py-1 rounded-full text-xs font-semibold`}
-                >
-                  Explore
                 </div>
                 <motion.div
                   initial={{ x: -4, opacity: 0 }}
@@ -623,7 +628,9 @@ useEffect(() => {
                   <ArrowRight className="w-5 h-5" />
                 </motion.div>
               </motion.a>
-            ))}
+            )):
+            <>
+            </>}
           </div>
         </div>
       </section>

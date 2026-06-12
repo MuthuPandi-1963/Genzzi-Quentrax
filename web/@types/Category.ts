@@ -10,7 +10,10 @@ export interface Category {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  topics: Topic[];
+  _count?: {
+    topics: number,
+  }
+  topics?: Topic[];
 }
 
 export interface CategoryCreateInput {

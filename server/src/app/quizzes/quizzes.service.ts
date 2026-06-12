@@ -18,13 +18,9 @@ import { Prisma, QuizStatus } from "@prisma/client";
 const creatorSelect = {
   select: {
     id: true,
-    profile: {
-      select: {
-        name: true,
-        avatar: true,
-        role: true,
-      },
-    },
+    name: true,
+    avatar: true,
+    role: true,
   },
 } as const;
 
@@ -43,18 +39,21 @@ export class QuizzesService {
     id: string;
     creator: {
       id: string;
-      profile?: { name: string; avatar: string | null; role: string } | null;
+      name: string;
+      avatar: string | null;
+      role: string;
     } | null;
     [key: string]: unknown;
   }): QuizResponse {
+    console.log(raw);
     return {
       ...(raw as unknown as QuizResponse),
       creator: raw.creator
         ? {
             id: raw.creator.id,
-            name: raw.creator.profile?.name ?? null,
-            avatar: raw.creator.profile?.avatar ?? null,
-            role: raw.creator.profile?.role ?? null,
+            name: raw.creator?.name ?? null,
+            avatar: raw.creator?.avatar ?? null,
+            role: raw.creator?.role ?? null,
           }
         : undefined,
     };
@@ -76,11 +75,38 @@ export class QuizzesService {
     if (filters.topicId) where.topicId = filters.topicId;
 
     const quizzes = await this.prisma.quiz.findMany({
-      where,
-      include: {
-        creator: creatorSelect,
-        topic: true,
-        questions: true,
+      where: {
+        status: "ACTIVE",
+      },
+      select: {
+        id: true,
+        imageUrl: true,
+        title: true,
+        description: true,
+        timeLimit: true,
+        totalPoints: true,
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        questions: {
+          select: {
+            questionText: true,
+          },
+          take: 3,
+        },
+        _count: {
+          select: {
+            questions: true,
+          },
+        },
+        topic: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -93,10 +119,9 @@ export class QuizzesService {
             id: string;
             creator: {
               id: string;
-              profile?:
-                | { name: string; avatar: string | null; role: string }
-                | null
-                | undefined;
+              name: string;
+              avatar: string | null;
+              role: string;
             } | null;
           },
         ),
@@ -127,7 +152,14 @@ export class QuizzesService {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
       include: {
-        creator: creatorSelect,
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            avatar: true,
+          },
+        },
         topic: true,
         questions: true,
         history: true,
@@ -159,7 +191,7 @@ export class QuizzesService {
           description: dto.description ?? null,
           creatorId: dto.creatorId,
           totalPoints: dto.totalPoints ?? 0,
-          status: dto.status ?? QuizStatus.active,
+          status: dto.status ?? "ACTIVE",
           tags: dto.tags ?? [],
           timeLimit: dto.timeLimit ?? null,
           topicId: dto.topicId ?? null,
@@ -198,7 +230,7 @@ export class QuizzesService {
           description: q.description ?? null,
           creatorId: q.creatorId,
           totalPoints: q.totalPoints ?? 0,
-          status: q.status ?? QuizStatus.active,
+          status: q.status ?? "ACTIVE",
           tags: q.tags ?? [],
           timeLimit: q.timeLimit ?? null,
           topicId: q.topicId ?? null,
@@ -248,38 +280,43 @@ export class QuizzesService {
     id: string,
     dto: AddQuestionsToQuizDto,
   ): Promise<QuizResponse> {
-    if (!id) {
-      throw new BadRequestException("Quiz ID is required");
-    }
-
-    const quiz = await this.prisma.quiz.findUnique({ where: { id } });
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id },
+    });
 
     if (!quiz) {
       throw new NotFoundException("Quiz not found");
     }
 
-    const questions = await Promise.all(
-      dto.questions.map((qId) =>
-        this.prisma.question.findUnique({ where: { id: qId } }),
-      ),
-    );
+    const questions = await this.prisma.question.findMany({
+      where: {
+        id: {
+          in: dto.questions,
+        },
+      },
+      select: {
+        id: true,
+        points: true,
+      },
+    });
 
-    if (questions.some((q) => !q)) {
+    if (questions.length !== dto.questions.length) {
       throw new NotFoundException("One or more questions not found");
     }
 
-    const totalPoints = questions.reduce(
-      (prev, curr) => prev + (curr?.points ?? 0),
-      0,
-    );
+    const additionalPoints = questions.reduce((sum, q) => sum + q.points, 0);
 
-    try {
-      const updatedQuiz = await this.prisma.quiz.update({
+    const updatedQuiz = await this.prisma.$transaction(async (tx) => {
+      return tx.quiz.update({
         where: { id },
         data: {
-          totalPoints,
+          totalPoints: {
+            increment: additionalPoints,
+          },
           questions: {
-            connect: dto.questions.map((qId) => ({ id: qId })),
+            connect: questions.map((q) => ({
+              id: q.id,
+            })),
           },
         },
         include: {
@@ -288,16 +325,59 @@ export class QuizzesService {
           questions: true,
         },
       });
+    });
 
-      return this.mapQuiz(updatedQuiz);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if ((error as { code: string }).code === "P2025") {
-          throw new NotFoundException("Quiz not found");
-        }
-      }
-      throw error;
+    return this.mapQuiz(updatedQuiz);
+  }
+
+  async removeQuestions(
+    id: string,
+    dto: AddQuestionsToQuizDto,
+  ): Promise<QuizResponse> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException("Quiz not found");
     }
+
+    const questions = await this.prisma.question.findMany({
+      where: {
+        id: {
+          in: dto.questions,
+        },
+      },
+      select: {
+        id: true,
+        points: true,
+      },
+    });
+
+    const deductedPoints = questions.reduce((sum, q) => sum + q.points, 0);
+
+    const updatedQuiz = await this.prisma.$transaction(async (tx) => {
+      return tx.quiz.update({
+        where: { id },
+        data: {
+          totalPoints: {
+            decrement: deductedPoints,
+          },
+          questions: {
+            disconnect: questions.map((q) => ({
+              id: q.id,
+            })),
+          },
+        },
+        include: {
+          creator: creatorSelect,
+          topic: true,
+          questions: true,
+        },
+      });
+    });
+
+    return this.mapQuiz(updatedQuiz);
   }
 
   async remove(id: string): Promise<void> {

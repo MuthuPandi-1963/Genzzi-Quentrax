@@ -123,25 +123,27 @@ enum UserRole {
 }
 
 enum Difficulty {
-  easy
-  medium
-  hard
+  EASY
+  MEDIUM
+  HARD
 }
 
 enum QuestionType {
   MCQ
   TRUE_FALSE
   FILL_BLANK
+  LONG_ANSWERS
+  CODING
 }
 
 enum QuestionStatus {
-  active
-  inactive
+  ACTIVE
+  INACTIVE
 }
 
 enum QuizStatus {
-  active
-  inactive
+  ACTIVE
+  INACTIVE
 }
 
 enum AssessmentStatus {
@@ -209,7 +211,7 @@ model AuditLog {
 // =============================================================================
 
 model Category {
-  id          String  @id @default(uuid())
+  id          String  @id @default(uuid())  @db.Uuid
   name        String  @unique @db.VarChar(100)
   description String? @db.VarChar(500)
   imageUrl    String? @db.VarChar(500)
@@ -226,12 +228,12 @@ model Category {
 }
 
 model Topic {
-  id          String     @id @default(uuid())
+  id          String     @id @default(uuid()) @db.Uuid
   name        String     @db.VarChar(150)
   description String?    @db.VarChar(500)
-  categoryId  String
+  categoryId  String     @db.Uuid
   imageUrl    String?    @db.VarChar(500)
-  difficulty  Difficulty @default(medium)
+  difficulty  Difficulty @default(MEDIUM)
   tags        String[]   @default([])
 
   // Soft delete
@@ -250,7 +252,7 @@ model Topic {
 }
 
 model Question {
-  id           String         @id @default(uuid())
+  id           String         @id @default(uuid())  @db.Uuid
   questionText String         @db.VarChar(2000)
   questionType QuestionType
   difficulty   Difficulty
@@ -258,14 +260,14 @@ model Question {
   points       Int            @default(1)
   explanation  String?        @db.VarChar(2000)
   tags         String[]       @default([])
-  status       QuestionStatus @default(active)
+  status       QuestionStatus @default(ACTIVE)
 
   // options schema per type:
   //   MCQ / TRUE_FALSE : [{"text":"...","isCorrect":true}, ...]
   //   FILL_BLANK        : {"acceptedAnswers":["..."], "caseSensitive": false}
   options Json
 
-  topicId String
+  topicId String             @db.Uuid
   topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   // Soft delete
@@ -286,17 +288,17 @@ model Question {
 // =============================================================================
 
 model Quiz {
-  id          String     @id @default(uuid())
+  id          String     @id @default(uuid())  @db.Uuid
   title       String     @db.VarChar(200)
   description String?    @db.VarChar(1000)
   totalPoints Int        @default(0)
-  status      QuizStatus @default(active)
+  status      QuizStatus @default(ACTIVE)
   tags        String[]   @default([])
   timeLimit   Int?
   imageUrl    String?    @db.VarChar(500)
 
   creatorId String @db.Uuid
-  topicId   String?
+  topicId   String? @db.Uuid
 
   deletedAt DateTime?
 
@@ -320,7 +322,7 @@ model Quiz {
 model QuizHistory {
   id          String   @id @default(uuid()) @db.Uuid
   userId      String   @db.Uuid
-  quizId      String
+  quizId      String   @db.Uuid
   score       Int
   completedAt DateTime @default(now())
 
@@ -360,7 +362,7 @@ model CoinsHistory {
   coinsId   String  @db.Uuid // FK → Coins.id for join without subquery
   coins     Int      // positive = earned, negative = spent
   reason    String?  @db.VarChar(200)
-  quizId    String?
+  quizId    String?  @db.Uuid
   createdAt DateTime @default(now())
 
   // Always insert inside prisma.$transaction with the Coins.balance increment
@@ -393,7 +395,7 @@ model Assessment {
   published Boolean   @default(false)
 
   // Single topic scope
-  topicId String?
+  topicId String?     @db.Uuid
 
   // Scoring config
   // SQL CHECK: passingScore BETWEEN 0 AND 100
@@ -438,9 +440,9 @@ model Assessment {
 }
 
 model AssessmentAssignment {
-  id           String           @id @default(uuid())
-  assessmentId String
-  userId       String
+  id           String           @id @default(uuid()) @db.Uuid
+  assessmentId String           @db.Uuid
+  userId       String           @db.Uuid
   status       AssignmentStatus @default(PENDING)
   assignedAt   DateTime         @default(now())
   dueDate      DateTime?
@@ -457,9 +459,9 @@ model AssessmentAssignment {
 }
 
 model AssessmentAttempt {
-  id           String        @id @default(uuid())
-  assessmentId String
-  userId       String
+  id           String        @id @default(uuid())  @db.Uuid
+  assessmentId String        @db.Uuid
+  userId       String        @db.Uuid
 
   // SQL CHECK: score >= 0
   score    Int
@@ -483,9 +485,9 @@ model AssessmentAttempt {
 
 // Questions attached directly to an assessment (single source of truth)
 model AssessmentQuestion {
-  id           String @id @default(uuid())
-  assessmentId String
-  questionId   String
+  id           String @id @default(uuid())   @db.Uuid
+  assessmentId String @db.Uuid
+  questionId   String @db.Uuid
   sortOrder    Int    @default(0)
   // Override per-assessment score for this question
   pointsOverride Int?

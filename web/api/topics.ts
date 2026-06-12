@@ -1,23 +1,25 @@
-import AxiosInstance from "./axiosInstance.js";
+import { Topic } from "@/@types";
+import { TopicFormData } from "@/components/forms";
+import axiosInstance from "@/lib/axiosInstance";
 
 const url = "topics";
 
 export const TopicAPI = {
   // Fetch all topics
-  getAll: () => AxiosInstance.get(`/${url}`),
+  getAll: () => axiosInstance.get(`/${url}`),
 
   // Fetch topics by category
-  getByCategoryId: (categoryId: string) => AxiosInstance.get(`/${url}`, { params: { categoryId } }),
+  getByCategoryId: (categoryId: string) => axiosInstance.get(`/${url}`, { params: { categoryId } }),
 
   // Fetch topic by ID
-  getById: (id: string) => AxiosInstance.get(`/${url}/${id}`),
+  getById: (id: string) => axiosInstance.get(`/${url}/${id}`),
 
   // Create new topic
-  create: (data: any) => AxiosInstance.post(`/${url}`, data),
+  create: (data: TopicFormData) => axiosInstance.post(`/${url}`, data),
 
   // Update topic
-  update: (id: string, data: any) => AxiosInstance.patch(`/${url}/${id}`, data),
+  update: (id: string, data: Partial<TopicFormData>) => axiosInstance.put(`/${url}/${id}`, data),
 
   // Soft delete topic
-  delete: (id: string) => AxiosInstance.delete(`/${url}/${id}`),
+  delete: (id: string) => axiosInstance.delete(`/${url}/${id}`),
 };

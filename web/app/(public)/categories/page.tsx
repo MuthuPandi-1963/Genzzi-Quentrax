@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import CategoryCard from "@/components/data-display/CategoryCard";
 import EmptyState from "@/components/feedback/EmptyState";
+import { useCategories } from "@/hooks";
+import { Category } from "@/@types";
 
-const mockCategories = [
-  { id: "1", name: "Science", description: "Physics, Chemistry, Biology and more.", imageUrl: null, _count: { topics: 42 } },
-  { id: "2", name: "Technology", description: "Programming, AI, and Gadgets.", imageUrl: null, _count: { topics: 38 } },
-  { id: "3", name: "History", description: "World history, ancient civilizations.", imageUrl: null, _count: { topics: 24 } },
-  { id: "4", name: "Geography", description: "Countries, capitals, and maps.", imageUrl: null, _count: { topics: 18 } },
-  { id: "5", name: "Mathematics", description: "Algebra, Geometry, Calculus.", imageUrl: null, _count: { topics: 29 } },
-  { id: "6", name: "Literature", description: "Books, authors, and poetry.", imageUrl: null, _count: { topics: 15 } },
-];
 
 export default function CategoriesBrowserPage() {
   const [search, setSearch] = useState("");
-
-  const filteredCategories = mockCategories.filter(cat =>
+  const {Categories,isLoading} = useCategories()
+  const [categories,setCategories] = useState<Category[]>();
+    useEffect(()=>{
+      (async()=>{
+        console.log(Categories);
+        setCategories(Categories)
+      })()
+    },[isLoading,Categories])
+  const filteredCategories =categories && categories.length > 0 ? categories.filter(cat =>
     cat.name.toLowerCase().includes(search.toLowerCase()) ||
-    cat.description.toLowerCase().includes(search.toLowerCase())
-  );
+    cat.description?.toLowerCase().includes(search.toLowerCase())
+  ) : [];
 
   return (
     <div className="min-h-screen text-foreground pt-24 pb-20 transition-colors duration-500">

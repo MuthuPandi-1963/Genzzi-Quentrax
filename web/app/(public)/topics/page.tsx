@@ -1,34 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter } from "lucide-react";
 import TopicCard from "@/components/data-display/TopicCard";
 import EmptyState from "@/components/feedback/EmptyState";
 import { useTheme } from "next-themes";
+import { useTopics } from "@/hooks";
+import { Topic } from "@/@types";
 
-// Mock data
-const mockTopics = [
-  { id: "1", name: "Quantum Mechanics", description: "Deep dive into subatomic phenomena.", difficulty: "hard" as const, tags: ["physics", "quantum"], category: { name: "Science" }, _count: { questions: 120, quizzes: 8 } },
-  { id: "2", name: "React Navigation", description: "Routing patterns in modern React apps.", difficulty: "medium" as const, tags: ["react", "frontend"], category: { name: "Technology" }, _count: { questions: 50, quizzes: 4 } },
-  { id: "3", name: "World War II", description: "Key events and battles of WWII.", difficulty: "easy" as const, tags: ["history", "war"], category: { name: "History" }, _count: { questions: 200, quizzes: 15 } },
-  { id: "4", name: "Python Basics", description: "Introduction to Python programming.", difficulty: "easy" as const, tags: ["python", "coding"], category: { name: "Technology" }, _count: { questions: 350, quizzes: 30 } },
-  { id: "5", name: "Calculus I", description: "Limits, derivatives, and integrals.", difficulty: "hard" as const, tags: ["math", "calculus"], category: { name: "Mathematics" }, _count: { questions: 180, quizzes: 10 } },
-  { id: "6", name: "European Capitals", description: "Memorize the capitals of European nations.", difficulty: "medium" as const, tags: ["geography", "europe"], category: { name: "Geography" }, _count: { questions: 80, quizzes: 5 } },
-];
 
 export default function TopicsBrowserPage() {
   const {resolvedTheme} = useTheme()
-  console.log(resolvedTheme);
-  
+  const {topics:data,isLoading} = useTopics()
+  const [topics,setTopics] = useState<Topic[]>();
   const [search, setSearch] = useState("");
+  useEffect(()=>{
+    (async()=>{
+      setTopics(data);
+    })()
+  },[isLoading])
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
 
-  const filteredTopics = mockTopics.filter(topic => {
+  const filteredTopics =topics && topics?.length  > 0 ? topics.filter(topic => {
     const matchesSearch = topic.name.toLowerCase().includes(search.toLowerCase()) || topic.tags.some(t => t.includes(search.toLowerCase()));
     const matchesDiff = filterDifficulty === "all" || topic.difficulty === filterDifficulty;
     return matchesSearch && matchesDiff;
-  });
+  }) : [];
 
   return (
     <div className={`min-h-screen bg-transparent pt-24 pb-20 transition-colors duration-500`}>
@@ -97,7 +95,7 @@ export default function TopicsBrowserPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid  md:grid-cols-1  xl:grid-cols-2 gap-6"
           >
             {filteredTopics.map((topic) => (
               <TopicCard key={topic.id} topic={topic} />

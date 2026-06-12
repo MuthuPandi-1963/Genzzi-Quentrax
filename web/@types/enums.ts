@@ -7,9 +7,9 @@ export enum UserRole {
 export type UserRoleString = 'ADMIN' | 'STAFF' | 'STUDENT';
 
 export enum Difficulty {
-  easy = 'easy',
-  medium = 'medium',
-  hard = 'hard',
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD',
 }
 
 export type DifficultyString = 'easy' | 'medium' | 'hard';
@@ -18,20 +18,22 @@ export enum QuestionType {
   MCQ = 'MCQ',
   TRUE_FALSE = 'TRUE_FALSE',
   FILL_BLANK = 'FILL_BLANK',
+  LONG_ANSWER = 'LONG_ANSWER',
+  CODING = 'CODING',
 }
 
 export type QuestionTypeString = 'MCQ' | 'TRUE_FALSE' | 'FILL_BLANK';
 
 export enum QuestionStatus {
-  active = 'active',
-  inactive = 'inactive',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
 
 export type QuestionStatusString = 'active' | 'inactive';
 
 export enum QuizStatus {
-  active = 'active',
-  inactive = 'inactive',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
 
 export type QuizStatusString = 'active' | 'inactive';

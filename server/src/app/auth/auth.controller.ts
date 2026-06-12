@@ -71,7 +71,7 @@ export class AuthController {
         ...COOKIE_OPTIONS,
         maxAge: ACCESS_TOKEN_TTL_MS,
       });
-      res.cookie("rft-education", refreshToken, {
+      res.cookie("refresh-token-education", refreshToken, {
         ...COOKIE_OPTIONS,
         maxAge: REFRESH_TOKEN_TTL_MS,
       });
@@ -98,18 +98,24 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: Request, @Res() res: Response) {
     const cookies = req.cookies as Record<string, string>;
-    const refreshToken = cookies["rft-education"];
+
+    const refreshToken = cookies["refresh-token-education"];
 
     if (!refreshToken) {
       throw new UnauthorizedException("No refresh token provided");
     }
 
-    const { accessToken } =
+    const { accessToken, refreshToken: newRefreshToken } =
       await this.authService.refreshAccessToken(refreshToken);
 
     res.cookie("access-token-education", accessToken, {
       ...COOKIE_OPTIONS,
       maxAge: ACCESS_TOKEN_TTL_MS,
+    });
+
+    res.cookie("refresh-token-education", newRefreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: REFRESH_TOKEN_TTL_MS,
     });
 
     return res
@@ -123,12 +129,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(@Req() req: Request, @Res() res: Response) {
     const cookies = req.cookies as Record<string, string>;
-    const refreshToken = cookies["rft-education"];
+    const refreshToken = cookies["refresh-token-education"];
 
     await this.authService.logout(refreshToken);
 
     res.clearCookie("access-token-education", { path: "/" });
-    res.clearCookie("rft-education", { path: "/" });
+    res.clearCookie("refresh-token-education", { path: "/" });
 
     return res
       .status(HttpStatus.OK)

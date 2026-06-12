@@ -1,79 +1,46 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AuthAPI } from "../api/auth";
+import { AxiosError } from "axios";
+import { AuthAPI  } from "@/api/auth";
+import { ApiResponse, AuthUser } from "@/@types/auth";
 
-export const useAuth = () => {
+const ME_QUERY_KEY = ["auth", "me"] as const;
+
+// ── useMeQuery: fetches on mount, handles loading/error automatically ───────
+
+export const useMeQuery = () =>
+  useQuery<ApiResponse<AuthUser>, AxiosError>({
+    queryKey: ME_QUERY_KEY,
+    queryFn: async () => {
+      const response = await AuthAPI.me(); // AxiosResponse<ApiResponse<AuthUser>>
+      return response.data; // ← ApiResponse<AuthUser> ✓
+    },
+    retry: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+// ── useLoginMutation ─────────────────────────────────────────────────────────
+
+export const useLoginMutation = () => {
   const queryClient = useQueryClient();
-
-  const login = useMutation({
+  return useMutation({
     mutationFn: AuthAPI.login,
     onSuccess: () => {
-      queryClient.invalidateQueries(["me"]);
-      queryClient.invalidateQueries(["sessions"]);
+      queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
     },
   });
+};
 
-  const register = useMutation({
-    mutationFn: AuthAPI.register,
-  });
+// ── useLogoutMutation ────────────────────────────────────────────────────────
 
-  const logout = useMutation({
+export const useLogoutMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: AuthAPI.logout,
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
       queryClient.clear();
     },
   });
-
-  const logoutAll = useMutation({
-    mutationFn: AuthAPI.logoutAll,
-    onSuccess: () => {
-      queryClient.clear();
-    },
-  });
-
-  const refresh = useMutation({
-    mutationFn: AuthAPI.refresh,
-  });
-
-  const verifyEmail = useMutation({
-    mutationFn: AuthAPI.verifyEmail,
-  });
-
-  const resendVerification = useMutation({
-    mutationFn: AuthAPI.resendVerification,
-  });
-
-  const forgotPassword = useMutation({
-    mutationFn: AuthAPI.forgotPassword,
-  });
-
-  const resetPassword = useMutation({
-    mutationFn: AuthAPI.resetPassword,
-  });
-
-  const mfaSetup = useMutation({
-    mutationFn: AuthAPI.mfaSetup,
-  });
-
-  const mfaVerifySetup = useMutation({
-    mutationFn: AuthAPI.mfaVerifySetup,
-  });
-
-  const mfaDisable = useMutation({
-    mutationFn: AuthAPI.mfaDisable,
-  });
-
-  return {
-    login,
-    register,
-    logout,
-    logoutAll,
-    refresh,
-    verifyEmail,
-    resendVerification,
-    forgotPassword,
-    resetPassword,
-    mfaSetup,
-    mfaVerifySetup,
-    mfaDisable,
-  };
 };

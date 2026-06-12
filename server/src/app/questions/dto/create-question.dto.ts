@@ -7,6 +7,7 @@ import {
   IsArray,
   Min,
   MaxLength,
+  IsNotEmpty,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { Difficulty, QuestionType, QuestionStatus } from "@prisma/client";
@@ -39,6 +40,7 @@ export class CreateQuestionDto {
   // options schema per type:
   //   MCQ / TRUE_FALSE : [{"text":"...","isCorrect":true}, ...]
   //   FILL_BLANK        : {"acceptedAnswers":["..."], "caseSensitive": false}
+  @IsNotEmpty()
   options: any;
 
   @IsArray()

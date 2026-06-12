@@ -1,6 +1,8 @@
 // Auto-generated from Prisma model: Question
 
+import { QuestionOptions } from '@/components/forms';
 import { Difficulty, QuestionStatus, QuestionType } from './enums';
+import { Topic } from './Topic';
 
 export interface Question {
   id: string;
@@ -12,6 +14,11 @@ export interface Question {
   explanation: string | null;
   tags: string[];
   status: QuestionStatus;
+  topic?: Topic;
+  options:QuestionOptions;
+  deletedAt?: string;
+  updatedAt?: string | number | Date;
+  createdAt: string;
 }
 
 export interface QuestionCreateInput {

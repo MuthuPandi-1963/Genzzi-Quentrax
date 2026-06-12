@@ -9,6 +9,10 @@ import { QuizHistory } from './QuizHistory';
 import { Topic } from './Topic';
 import { User } from './User';
 
+export interface QuizListResponse {
+  quizzes: Quiz[];
+  count: number;
+}
 export interface Quiz {
   id: string;
   title: string;
@@ -24,7 +28,7 @@ export interface Quiz {
   createdAt: Date;
   updatedAt: Date;
   creator: User;
-  topic: Topic | null;
+  topic?: Topic;
   questions: Question[];
   history: QuizHistory[];
   assessments: Assessment[];

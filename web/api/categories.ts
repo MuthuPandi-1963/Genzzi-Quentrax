@@ -14,7 +14,7 @@ export const CategoryAPI = {
   create: (data: CategoryCreateInput) => AxiosInstance.post(`/${url}`, data),
 
   // Update category
-  update: (id: string, data: Partial<CategoryCreateInput>) => AxiosInstance.patch(`/${url}/${id}`, data),
+  update: (id: string, data: Partial<CategoryCreateInput>) => AxiosInstance.put(`/${url}/${id}`, data),
 
   // Soft delete category
   delete: (id: string) => AxiosInstance.delete(`/${url}/${id}`),

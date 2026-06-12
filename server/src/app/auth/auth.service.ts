@@ -7,7 +7,6 @@ import { OAuthCallbackDto, UpdateProfileDto } from "./dto/auth.dto";
 import { ENV } from "../../config/env.Config";
 import { DeviceService } from "src/core/device/device.service";
 import { type Request } from "express";
-import { UserProfile } from "@prisma/client";
 
 export interface AuthenticatedUser {
   userId: string;
@@ -17,7 +16,7 @@ export interface AuthenticatedUser {
 }
 
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-const REDIS_REFRESH_PREFIX = "rft-education:";
+const REDIS_REFRESH_PREFIX = "refresh-token-education:";
 
 @Injectable()
 export class AuthService {
@@ -106,17 +105,17 @@ export class AuthService {
 
   async refreshAccessToken(
     refreshToken: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const hash = this.hashToken(refreshToken);
 
-    // Look up all keys for this hash — we store as rft-education:{authId}
-    // We need to find which authId owns this token
     const authId = await this.redis.get(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
+
     if (!authId) {
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
 
     const stored = await this.redis.get(`${REDIS_REFRESH_PREFIX}${authId}`);
+
     if (stored !== hash) {
       throw new UnauthorizedException("Refresh token reuse detected");
     }
@@ -126,22 +125,27 @@ export class AuthService {
       include: { userProfile: true },
     });
 
-    if (!auth || !auth?.userProfile) {
+    if (!auth?.userProfile) {
       throw new UnauthorizedException("User not found");
     }
 
-    const profile = auth.userProfile as UserProfile;
-
-    // Rotate refresh token
     await this.redis.del(`${REDIS_REFRESH_PREFIX}${authId}`);
     await this.redis.del(`${REDIS_REFRESH_PREFIX}hash:${hash}`);
 
     const newRefreshToken = this.generateRefreshToken();
+
     await this.storeRefreshToken(authId, newRefreshToken);
 
-    const accessToken = this.issueAccessToken(authId, profile.id, profile.role);
+    const accessToken = this.issueAccessToken(
+      authId,
+      auth.userProfile.id,
+      auth.userProfile.role,
+    );
 
-    return { accessToken };
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 
   // ── Logout ──────────────────────────────────────────────────────────────────
@@ -161,7 +165,22 @@ export class AuthService {
   async getProfile(authId: string) {
     return this.prisma.auth.findUnique({
       where: { id: authId },
-      include: { userProfile: true },
+      include: {
+        userProfile: {
+          select: {
+            id: true,
+            name: true,
+            countryCode: true,
+            avatar: true,
+            bio: true,
+            role: true,
+            coins: true,
+            assessmentAttempts: true,
+            quizHistories: true,
+            assessmentAssignments: true,
+          },
+        },
+      },
     });
   }
 

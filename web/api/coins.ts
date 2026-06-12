@@ -1,14 +1,15 @@
-import AxiosInstance from "./axiosInstance.js";
+import axiosInstance from "@/lib/axiosInstance";
+
 
 const url = "coins";
 
 export const CoinsAPI = {
   // Get current user's coin balance
-  getBalance: () => AxiosInstance.get(`/${url}`),
+  getBalance: () => axiosInstance.get(`/${url}`),
 
   // Get coin transaction history
-  getHistory: () => AxiosInstance.get(`/${url}/history`),
+  getHistory: () => axiosInstance.get(`/${url}/history`),
 
   // Adjust coins (admin only)
-  adjust: (data: any) => AxiosInstance.post(`/${url}/adjust`, data),
+  adjust: (data: any) => axiosInstance.post(`/${url}/adjust`, data),
 };

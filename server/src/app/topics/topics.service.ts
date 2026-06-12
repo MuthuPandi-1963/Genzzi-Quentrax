@@ -39,7 +39,44 @@ export class TopicsService {
   async findOne(id: string): Promise<TopicResponse> {
     const topic = await this.prisma.topic.findUnique({
       where: { id },
-      include: { category: true, questions: true },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        quizzes: {
+          where: {
+            status: "ACTIVE",
+          },
+          select: {
+            id: true,
+            imageUrl: true,
+            title: true,
+            description: true,
+            timeLimit: true,
+            totalPoints: true,
+            creator: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            questions: {
+              select: {
+                questionText: true,
+              },
+              take: 3,
+            },
+            _count: {
+              select: {
+                questions: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!topic) {
@@ -138,7 +175,7 @@ export class TopicsService {
           ...(dto.name && { name: dto.name.trim() }),
           description: dto.description ?? undefined,
           categoryId: dto.categoryId ?? undefined,
-          difficulty: dto.difficulty ?? undefined,
+          difficulty: dto.difficulty ?? "MEDIUM",
           tags: dto.tags ?? undefined,
           imageUrl: dto.imageUrl ?? undefined,
         },

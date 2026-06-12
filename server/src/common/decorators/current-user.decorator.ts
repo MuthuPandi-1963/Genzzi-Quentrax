@@ -1,5 +1,14 @@
+// src/common/decorators/current-user.decorator.ts
+
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { AuthenticatedUser } from "src/app/auth/auth.service";
+
+// This must match what your JwtStrategy returns (the JWT payload)
+export interface AuthenticatedUser {
+  sub: string; // auth.id (the 'sub' from JWT)
+  authId: string; // same as sub, but explicit
+  profileId: string; // userProfile.id
+  role: string; // userProfile.role
+}
 
 interface RequestWithUser {
   user?: AuthenticatedUser;
@@ -15,6 +24,12 @@ export const CurrentUser = createParamDecorator(
 
     if (!user) return null;
 
-    return data ? user[data] : user;
+    // If data is provided, return that specific property
+    if (data) {
+      return user[data] ?? null;
+    }
+
+    // Otherwise return full user object
+    return user;
   },
 );

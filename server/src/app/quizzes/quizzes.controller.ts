@@ -113,6 +113,22 @@ export class QuizzesController {
     return ResponseSender.success(quiz, "Quiz questions updated successfully");
   }
 
+  @Put(":id/questions/remove")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("STAFF", "ADMIN")
+  @Throttle({ default: { limit: 10, ttl: 60 } })
+  @HttpCode(HttpStatus.OK)
+  async removeQuestions(
+    @Param("id") id: string,
+    @Body() dto: AddQuestionsToQuizDto,
+  ) {
+    const quiz = await this.quizzesService.removeQuestions(id, dto);
+    return ResponseSender.success(
+      quiz,
+      "Questions removed from quiz successfully",
+    );
+  }
+
   @Delete(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("STAFF", "ADMIN")

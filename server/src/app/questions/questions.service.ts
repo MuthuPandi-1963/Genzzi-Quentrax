@@ -127,7 +127,7 @@ export class QuestionsService {
           options: dto.options as Prisma.InputJsonValue,
           tags: dto.tags ?? [],
           hints: dto.hints ?? [],
-          status: dto.status ?? QuestionStatus.active,
+          status: dto.status ?? "ACTIVE",
         },
         include: { topic: true },
       });
@@ -166,7 +166,7 @@ export class QuestionsService {
           options: q.options as Prisma.InputJsonValue,
           tags: q.tags ?? [],
           hints: q.hints ?? [],
-          status: q.status ?? QuestionStatus.active,
+          status: q.status ?? "ACTIVE",
         })),
         skipDuplicates: true,
       });

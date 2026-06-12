@@ -24,6 +24,13 @@ export class CategoriesService {
   async findAll(): Promise<CategoryListResponse> {
     const categories = await this.prisma.category.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            topics: true,
+          },
+        },
+      },
     });
 
     return {
@@ -35,6 +42,7 @@ export class CategoriesService {
   async findOne(id: string): Promise<CategoryResponse> {
     const category: Category | null = await this.prisma.category.findUnique({
       where: { id },
+      include: { topics: true },
     });
 
     if (!category) {

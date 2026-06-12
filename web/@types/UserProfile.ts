@@ -10,7 +10,6 @@ import { Coins } from './Coins';
 import { CoinsHistory } from './CoinsHistory';
 import { Quiz } from './Quiz';
 import { QuizHistory } from './QuizHistory';
-import { UserAuth } from './UserAuth';
 
 export interface UserProfile {
   id: string;
@@ -19,10 +18,6 @@ export interface UserProfile {
   avatar: string | null;
   bio: string | null;
   role: UserRole;
-  deletedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  auth: UserAuth | null;
   quizHistory: QuizHistory[];
   createdQuizzes: Quiz[];
   coins: Coins | null;
@@ -39,7 +34,6 @@ export interface UserProfileCreateInput {
   avatar?: string | null;
   bio?: string | null;
   role?: UserRole;
-  auth?: UserAuth | null;
   quizHistory?: QuizHistory[];
   createdQuizzes?: Quiz[];
   coins?: Coins | null;

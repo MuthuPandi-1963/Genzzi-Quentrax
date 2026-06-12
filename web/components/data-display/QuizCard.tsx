@@ -3,17 +3,18 @@ import { Clock, HelpCircle, User, Play, ChevronRight } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { QuizStatus } from "@/@types/enums";
 
-interface QuizCardProps {
+export interface QuizCardProps {
   quiz: {
     id: string;
     title: string;
     description: string | null;
-    status: "active" | "inactive";
+    status: QuizStatus;
     timeLimit: number | null;
     totalPoints: number;
     _count?: { questions: number };
-    creator?: { profile: { name: string; avatar: string | null } };
+    creator?: { name: string; avatar: string | null };
     topic?: { name: string };
   };
   showStatus?: boolean;
@@ -62,12 +63,12 @@ export default function QuizCard({ quiz, showStatus = false, actionText = "Start
           </div>
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-emerald-500" />
-            <span className="truncate">{quiz.creator?.profile?.name || 'Admin'}</span>
+            <span className="truncate">{quiz.creator?.name || 'Admin'}</span>
           </div>
         </div>
       </div>
       
-      <div className="p-4 border-t border-black/5 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
+      <div className="p-4 border-t border-black/5 dark:border-white/5 bg-gray-50/50 dark:bg-white/2">
         <Link href={href} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl font-medium hover:bg-purple-600 dark:hover:bg-purple-500 transition-colors group/btn">
           <span>{actionText}</span>
           <motion.div

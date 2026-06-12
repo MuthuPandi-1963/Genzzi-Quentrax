@@ -31,8 +31,8 @@ export const loggerConfig: Params = {
               password: ENV.LOKI_TOKEN, // ✅ your API token from .env
             },
             labels: {
-              app: "genzzi-mail",
-              service: "mail-backend",
+              app: "genzzi-quiz",
+              service: "quiz-backend",
               env: ENV.NODE_ENV,
             },
             interval: 5,

@@ -23,14 +23,14 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         <span className="sr-only">View {category.name}</span>
       </Link>
       
-      <div className="h-40 bg-category-arts   relative flex items-center justify-center overflow-hidden">
+      <div className={`h-40    relative flex items-center justify-center overflow-hidden ${!category.imageUrl && "bg-category-arts"}`}>
         {category.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity mix-blend-overlay" />
+          <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover " />
         ) : (
           <FolderTree className="w-16 h-16 text-white" />
         )}
-        <div className="absolute inset-0  bg-linear-to-t from-black/60 to-transparent" />
+       {!category.imageUrl && <div className="absolute inset-0  bg-linear-to-t from-black/60 to-transparent" /> }
       </div>
       
       <div className="p-6 relative mt-4  rounded-t-3xl pt-8 transition-colors">

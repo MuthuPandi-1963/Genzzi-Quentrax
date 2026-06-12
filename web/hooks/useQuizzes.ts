@@ -1,112 +1,188 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QuizAPI } from "../api/quizzes";
+import { QuizAPI, QuizFormData } from "@/api/quizzes";
 
-export const useQuizzes = () => {
-  const queryClient = useQueryClient();
+// ─── Queries ──────────────────────────────────────────────────────────────
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["quizzes"],
-    queryFn: QuizAPI.getAll,
-    select: (res) => res.data,
+export const useQuizzes = (params?: {
+  status?: string;
+  creatorId?: string;
+  tag?: string;
+  topicId?: string;
+}) => {
+  return useQuery({
+    queryKey: ["quizzes", params],
+    queryFn: async () => {
+      const res = await QuizAPI.getAll(params);
+      return res.data.data; // unwrap ResponseSender wrapper
+    },
+    select: (data) => data,
     staleTime: 1000 * 60 * 5,
   });
+};
 
-  const getById = (id: string) =>
-    useQuery({
-      queryKey: ["quizzes", id],
-      queryFn: () => QuizAPI.getById(id),
-      select: (res) => res.data,
-      enabled: !!id,
-    });
+export const useQuizById = (id: string) => {
+  return useQuery({
+    queryKey: ["quizzes", id],
+    queryFn: async () => {
+      const res = await QuizAPI.getById(id);
+      return res.data.data;
+    },
+    enabled: !!id,
+  });
+};
 
-  const getByTopicId = (topicId: string) =>
-    useQuery({
-      queryKey: ["quizzes", "topic", topicId],
-      queryFn: () => QuizAPI.getByTopicId(topicId),
-      select: (res) => res.data,
-      enabled: !!topicId,
-    });
+export const useQuizzesByTopic = (topicId: string) => {
+  return useQuery({
+    queryKey: ["quizzes", "topic", topicId],
+    queryFn: async () => {
+      const res = await QuizAPI.getByTopicId(topicId);
+      return res.data.data;
+    },
+    enabled: !!topicId,
+  });
+};
 
-  const getHistory = (id: string) =>
-    useQuery({
-      queryKey: ["quizzes", id, "history"],
-      queryFn: () => QuizAPI.getHistory(id),
-      select: (res) => res.data,
-      enabled: !!id,
-    });
+export const useQuizHistory = (id: string) => {
+  return useQuery({
+    queryKey: ["quizzes", id, "history"],
+    queryFn: async () => {
+      const res = await QuizAPI.getHistory(id);
+      return res.data.data;
+    },
+    enabled: !!id,
+  });
+};
 
-  const getLeaderboard = (id: string, params?: any) =>
-    useQuery({
-      queryKey: ["quizzes", id, "leaderboard", params],
-      queryFn: () => QuizAPI.getLeaderboard(id, params),
-      select: (res) => res.data,
-      enabled: !!id,
-    });
+export const useQuizLeaderboard = (
+  id: string,
+  params?: Record<string, unknown>,
+) => {
+  return useQuery({
+    queryKey: ["quizzes", id, "leaderboard", params],
+    queryFn: async () => {
+      const res = await QuizAPI.getLeaderboard(id, params);
+      return res.data.data;
+    },
+    enabled: !!id,
+  });
+};
+
+// ─── Mutations ──────────────────────────────────────────────────────────
+
+export const useQuizMutations = () => {
+  const queryClient = useQueryClient();
 
   const createQuiz = useMutation({
-    mutationFn: QuizAPI.create,
+    mutationFn: async (data: QuizFormData) => {
+      const res = await QuizAPI.create(data);
+      return res.data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(["quizzes"]);
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });
 
   const createMany = useMutation({
-    mutationFn: QuizAPI.createMany,
+    mutationFn: async (data: QuizFormData[]) => {
+      const res = await QuizAPI.createMany(data);
+      return res.data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(["quizzes"]);
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });
 
   const updateQuiz = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => QuizAPI.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["quizzes"]);
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<QuizFormData>;
+    }) => {
+      const res = await QuizAPI.update(id, data);
+      return res.data;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes", vars.id] });
     },
   });
 
   const deleteQuiz = useMutation({
-    mutationFn: (id: string) => QuizAPI.delete(id),
+    mutationFn: async (id: string) => {
+      const res = await QuizAPI.delete(id);
+      return res.data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries(["quizzes"]);
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });
 
   const addQuestions = useMutation({
-    mutationFn: ({ quizId, addedQuestionIds }: { quizId: string; addedQuestionIds: string[] }) =>
-      QuizAPI.addQuestions(quizId, addedQuestionIds),
+    mutationFn: async ({
+      quizId,
+      questionIds,
+    }: {
+      quizId: string;
+      questionIds: string[];
+    }) => {
+      const res = await QuizAPI.addQuestions(quizId, questionIds);
+      return res.data;
+    },
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries(["quizzes", vars.quizId]);
+      queryClient.invalidateQueries({ queryKey: ["quizzes", vars.quizId] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+  });
+
+  const removeQuestions = useMutation({
+    mutationFn: async ({
+      quizId,
+      questionIds,
+    }: {
+      quizId: string;
+      questionIds: string[];
+    }) => {
+      const res = await QuizAPI.removeQuestions(quizId, questionIds);
+      return res.data;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes", vars.quizId] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
     },
   });
 
   const start = useMutation({
-    mutationFn: (id: string) => QuizAPI.start(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["quizzes"]);
+    mutationFn: async (id: string) => {
+      const res = await QuizAPI.start(id);
+      return res.data;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes", id] });
     },
   });
 
   const submit = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => QuizAPI.submit(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: unknown }) => {
+      const res = await QuizAPI.submit(id, data);
+      return res.data;
+    },
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries(["quizzes", vars.id, "history"]);
-      queryClient.invalidateQueries(["coins"]);
+      queryClient.invalidateQueries({
+        queryKey: ["quizzes", vars.id, "history"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["coins"] });
     },
   });
 
   return {
-    quizzes: data || [],
-    isLoading,
-    isError,
-    getById,
-    getByTopicId,
-    getHistory,
-    getLeaderboard,
     createQuiz,
     createMany,
     updateQuiz,
     deleteQuiz,
     addQuestions,
+    removeQuestions,
     start,
     submit,
   };

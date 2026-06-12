@@ -3,8 +3,8 @@ import { Difficulty } from "@prisma/client";
 export interface CategoryRelation {
   id: string;
   name: string;
-  description: string | null;
-  imageUrl: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface QuestionRelation {
