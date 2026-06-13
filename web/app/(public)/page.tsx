@@ -261,7 +261,7 @@ export default function LandingPage() {
       console.log(Categories);
       setCategories(Categories)
     })()
-  },[isLoading,Categories])
+  },[isLoading])
   useEffect(() => {
     const interval = setInterval(
       () => setCurrentTagline((p) => (p + 1) % heroTaglines.length),

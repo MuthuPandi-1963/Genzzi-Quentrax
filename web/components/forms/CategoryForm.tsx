@@ -80,7 +80,7 @@ const handleImageUpload = async (
             {/* Body */}
             <div className="p-6 space-y-6">
               {/* Basic Info */}
-              <div className="space-y-4">
+              <div className="space-y-4 overflow-y-auto">
                 <SectionHeader title="Details" icon={<Layers className="h-4 w-4" />} />
 
                 {/* Name */}
