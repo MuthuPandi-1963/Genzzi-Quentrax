@@ -18,7 +18,7 @@ export default function CategoriesBrowserPage() {
         console.log(Categories);
         setCategories(Categories)
       })()
-    },[isLoading,Categories])
+    },[isLoading])
   const filteredCategories =categories && categories.length > 0 ? categories.filter(cat =>
     cat.name.toLowerCase().includes(search.toLowerCase()) ||
     cat.description?.toLowerCase().includes(search.toLowerCase())
