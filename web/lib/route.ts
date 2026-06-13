@@ -15,6 +15,7 @@ export const ROLE_ROUTES: Record<UserRole, { path: string; label: string }[]> = 
   STUDENT: [
     { path: "/student", label: "Dashboard" },
     { path: "/student/quizzes", label: "Quizzes" },
+    { path: "/student/quizzes/:id/take", label: "Quizzes" },
     { path: "/student/topics", label: "Topics" },
     { path: "/student/categories", label: "Categories" },
     { path: "/profile", label: "Profile" },

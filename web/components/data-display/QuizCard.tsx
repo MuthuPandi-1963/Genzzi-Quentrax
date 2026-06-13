@@ -4,6 +4,7 @@ import StatusBadge from "./StatusBadge";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { QuizStatus } from "@/@types/enums";
+import { useAuthContext } from "@/context/auth.context";
 
 export interface QuizCardProps {
   quiz: {
@@ -23,7 +24,8 @@ export interface QuizCardProps {
 }
 
 export default function QuizCard({ quiz, showStatus = false, actionText = "Start Quiz", actionHref }: QuizCardProps) {
-  const href = actionHref || `/quizzes/${quiz.id}`;
+  const {isAuthenticated}=useAuthContext()
+  const href = isAuthenticated ? actionHref || `student/quizzes/${quiz.id}`:"/";
   
   return (
     <motion.div 
