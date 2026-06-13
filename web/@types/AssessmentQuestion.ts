@@ -1,6 +1,6 @@
 // Auto-generated from Prisma model: AssessmentQuestion
 
-import { Assessment } from './Assessment';
+import { Assessment } from './assessment.types';
 import { Question } from './Question';
 
 export interface AssessmentQuestion {

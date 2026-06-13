@@ -1,8 +1,8 @@
 // Auto-generated from Prisma model: AssessmentAttempt
 
+import { Assessment } from './assessment.types';
 import { AttemptStatus } from './enums';
 
-import { Assessment } from './Assessment';
 import { UserProfile } from './UserProfile';
 
 export interface AssessmentAttempt {

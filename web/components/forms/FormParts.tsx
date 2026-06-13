@@ -477,7 +477,7 @@ export function FormShell({ children, onClose }: FormShellProps) {
       />
       {/* Scrollable panel */}
       <motion.div
-        className="relative z-10 w-full max-w-2xl max-h-[92vh] overflow-y-auto
+        className="relative z-10 w-full max-w-2xl max-h-[92vh] overflow-y-hidden
           rounded-2xl border border-(--glass-border-strong)
           bg-(--color-background-elevated)
           shadow-[0_24px_80px_-16px_hsl(263_70%_20%/0.7)]"

@@ -1,45 +1,32 @@
+import type { AssessmentFormData } from "@/@types/assessment.types";
 import axiosInstance from "@/lib/axiosInstance";
 
-
-const url = "assessments";
-
 export const AssessmentAPI = {
-  // Fetch all assessments
-  getAll: () => axiosInstance.get(`/${url}`),
+  // ── Read ──
+  getAll: (params?: {
+    status?: string;
+    published?: string;
+    topicId?: string;
+  }) => axiosInstance.get("/assessments", { params }),
 
-  // Fetch assessment by ID
-  getById: (id: string) => axiosInstance.get(`/${url}/${id}`),
+  getById: (id: string) => axiosInstance.get(`/assessments/${id}`),
 
-  // Create new assessment
-  create: (data: any) => axiosInstance.post(`/${url}`, data),
+  getAssignments: (id: string) => axiosInstance.get(`/assessments/${id}/assignments`),
 
-  // Create multiple assessments
-  createMany: (data: any) => axiosInstance.post(`/${url}/many`, data),
+  getAttempts: (id: string) => axiosInstance.get(`/assessments/${id}/attempts`),
 
-  // Update assessment
-  update: (id: string, data: any) => axiosInstance.patch(`/${url}/${id}`, data),
+  // ── Write ──
+  create: (data: AssessmentFormData) => axiosInstance.post("/assessments", data),
 
-  // Soft delete assessment
-  delete: (id: string) => axiosInstance.delete(`/${url}/${id}`),
+  createMany: (data: AssessmentFormData[]) => axiosInstance.post("/assessments/many", { assessments: data }),
 
-  // Publish assessment
-  publish: (id: string) => axiosInstance.post(`/${url}/${id}/publish`),
+  update: (id: string, data: Partial<AssessmentFormData>) => axiosInstance.put(`/assessments/${id}`, data),
 
-  // Assign users to assessment
-  assign: (id: string, data: any) => axiosInstance.post(`/${url}/${id}/assign`, data),
+  publish: (id: string, published: boolean) =>
+    axiosInstance.post(`/assessments/${id}/publish`, { published }),
 
-  // Get assignments for assessment
-  getAssignments: (id: string) => axiosInstance.get(`/${url}/${id}/assignments`),
+  assignUsers: (id: string, userIds: string[]) =>
+    axiosInstance.post(`/assessments/${id}/assign`, { userIds }),
 
-  // Get attempts for assessment
-  getAttempts: (id: string, params?: any) => axiosInstance.get(`/${url}/${id}/attempts`, { params }),
-
-  // Start assessment attempt
-  start: (id: string) => axiosInstance.post(`/${url}/${id}/start`),
-
-  // Submit assessment attempt
-  submit: (id: string, data: any) => axiosInstance.post(`/${url}/${id}/submit`, data),
-
-  // Get assessment results
-  getResults: (id: string) => axiosInstance.get(`/${url}/${id}/results`),
+  delete: (id: string) => axiosInstance.delete(`/assessments/${id}`),
 };

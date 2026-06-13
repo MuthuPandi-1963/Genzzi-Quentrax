@@ -43,6 +43,7 @@ export enum AssessmentStatus {
   SCHEDULED = 'SCHEDULED',
   ACTIVE = 'ACTIVE',
   COMPLETED = 'COMPLETED',
+  INACTIVE = 'INACTIVE'
 }
 
 export type AssessmentStatusString = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'COMPLETED';

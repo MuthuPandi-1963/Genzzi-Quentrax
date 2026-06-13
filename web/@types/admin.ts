@@ -1,406 +1,209 @@
-// types/admin.ts — Quentrax Admin Panel Shared TypeScript Interfaces
-// ═══════════════════════════════════════════════════════════════════════════
+// lib/api/admin.ts — Quentrax Admin API Layer
+// Real fetch wrappers. Swap baseURL to your backend when ready.
 
-import { Difficulty } from "./enums";
+import type {
+  AdminUser,
+  Quiz,
+  Assessment,
+  Transaction,
+  LeaderboardEntry,
+  DashboardStats,
+  ActivityLog,
+  NotificationItem,
+} from "@/@types/admin";
 
-/* ──────────────────────────────────────────────────────────────────────────
-   CORE USER TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
-export type UserRole = "ADMIN" | "STAFF" | "STUDENT";
-export type UserStatus = "active" | "inactive" | "banned";
-
-export interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-  status: UserStatus;
-  lastActive: string;
-  createdAt: string;
-  coins: number;
-  quizzesTaken: number;
-  avgScore: number;
+async function fetcher<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
 }
 
-export interface UserListResponse {
+/* ═══════════════════════════════════════════════════════════════════════
+   DASHBOARD
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return fetcher<DashboardStats>("/admin/dashboard/stats");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   USERS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export async function getUsers(params?: { role?: string; search?: string; page?: number; limit?: number }): Promise<{
   data: AdminUser[];
   total: number;
   page: number;
   totalPages: number;
+}> {
+  const qs = new URLSearchParams();
+  if (params?.role && params.role !== "all") qs.set("role", params.role);
+  if (params?.search) qs.set("search", params.search);
+  if (params?.page) qs.set("page", String(params.page));
+  if (params?.limit) qs.set("limit", String(params.limit));
+  return fetcher(`/admin/users?${qs.toString()}`);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   QUIZ / CONTENT TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export type QuizStatus = "draft" | "published" | "archived";
-
-export interface Quiz {
-  id: string;
-  title: string;
-  category: string;
-  difficulty: Difficulty;
-  questionCount: number;
-  timeLimit: number; // minutes
-  attempts: number;
-  avgScore: number;
-  status: QuizStatus;
-  createdAt: string;
-  updatedAt?: string;
-  createdBy?: string;
-  tags?: string[];
+export async function getUserById(id: string): Promise<AdminUser> {
+  return fetcher<AdminUser>(`/admin/users/${id}`);
 }
 
-export interface QuizListResponse {
+export async function updateUserStatus(id: string, status: AdminUser["status"]): Promise<AdminUser> {
+  return fetcher<AdminUser>(`/admin/users/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  return fetcher<void>(`/admin/users/${id}`, { method: "DELETE" });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   QUIZZES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export async function getQuizzes(params?: { status?: string; category?: string; page?: number; limit?: number }): Promise<{
   data: Quiz[];
   total: number;
   page: number;
   totalPages: number;
+}> {
+  const qs = new URLSearchParams();
+  if (params?.status) qs.set("status", params.status);
+  if (params?.category) qs.set("category", params.category);
+  if (params?.page) qs.set("page", String(params.page));
+  if (params?.limit) qs.set("limit", String(params.limit));
+  return fetcher(`/admin/quizzes?${qs.toString()}`);
 }
 
-export interface Question {
-  id: string;
-  quizId: string;
-  type: "multiple_choice" | "true_false" | "fill_blank" | "matching";
-  question: string;
-  options?: string[];
-  correctAnswer: string | string[];
-  explanation?: string;
-  points: number;
-  difficulty: Difficulty;
-  category: string;
-  createdAt: string;
+export async function getQuizById(id: string): Promise<Quiz> {
+  return fetcher<Quiz>(`/admin/quizzes/${id}`);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   ASSESSMENT TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export type AssessmentType = "quiz" | "exam" | "assignment";
-export type AssessmentStatus = "upcoming" | "active" | "completed" | "graded";
-
-export interface Assessment {
-  id: string;
-  title: string;
-  type: AssessmentType;
-  description?: string;
-  dueDate: string;
-  startDate?: string;
-  totalStudents: number;
-  submittedCount: number;
-  gradedCount: number;
-  avgScore: number;
-  status: AssessmentStatus;
-  maxScore: number;
-  passingScore?: number;
-  createdBy: string;
-  createdAt: string;
+export async function createQuiz(data: Partial<Quiz>): Promise<Quiz> {
+  return fetcher<Quiz>("/admin/quizzes", { method: "POST", body: JSON.stringify(data) });
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   COIN / TRANSACTION TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export type TransactionType = "earned" | "spent" | "bonus" | "penalty" | "refund";
-
-export interface Transaction {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  type: TransactionType;
-  amount: number;
-  reason: string;
-  metadata?: Record<string, unknown>;
-  timestamp: string;
-  processedBy?: string;
+export async function updateQuiz(id: string, data: Partial<Quiz>): Promise<Quiz> {
+  return fetcher<Quiz>(`/admin/quizzes/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 }
 
-export interface CoinEconomySummary {
-  totalDistributed: number;
-  totalInCirculation: number;
-  totalEarnedToday: number;
-  totalSpentToday: number;
-  netFlowToday: number;
-  topEarners: { userId: string; userName: string; amount: number }[];
+export async function deleteQuiz(id: string): Promise<void> {
+  return fetcher<void>(`/admin/quizzes/${id}`, { method: "DELETE" });
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   LEADERBOARD TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   ASSESSMENTS
+   ═══════════════════════════════════════════════════════════════════════ */
 
-export type LeaderboardPeriod = "daily" | "weekly" | "monthly" | "all_time";
-
-export interface LeaderboardEntry {
-  rank: number;
-  userId: string;
-  userName: string;
-  avatar?: string;
-  score: number;
-  coins: number;
-  streak: number;
-  quizzesCompleted: number;
-  avgAccuracy: number;
-  trend: "up" | "down" | "same";
-  previousRank?: number;
+export async function getAssessments(): Promise<Assessment[]> {
+  return fetcher<Assessment[]>("/admin/assessments");
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   DASHBOARD / ANALYTICS TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export interface DashboardStats {
-  totalUsers: number;
-  activeUsersToday: number;
-  newUsersToday: number;
-  activeQuizzes: number;
-  totalQuizzes: number;
-  quizzesTakenToday: number;
-  assessments: number;
-  activeAssessments: number;
-  submissionsToday: number;
-  coinsDistributed: number;
-  coinsEarnedToday: number;
-  coinsSpentToday: number;
-  // Growth percentages
-  userGrowth: number;        // vs last period
-  quizGrowth: number;
-  assessmentGrowth: number;
-  coinGrowth: number;
-  engagementGrowth: number;
+export async function getAssessmentById(id: string): Promise<Assessment> {
+  return fetcher<Assessment>(`/admin/assessments/${id}`);
 }
 
-export interface TimeSeriesDataPoint {
-  date: string;
-  users: number;
-  quizzes: number;
-  assessments: number;
-  coins: number;
-  engagement: number;
+/* ═══════════════════════════════════════════════════════════════════════
+   TRANSACTIONS / COINS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export async function getTransactions(params?: { userId?: string; type?: string; limit?: number }): Promise<Transaction[]> {
+  const qs = new URLSearchParams();
+  if (params?.userId) qs.set("userId", params.userId);
+  if (params?.type) qs.set("type", params.type);
+  if (params?.limit) qs.set("limit", String(params.limit));
+  return fetcher<Transaction[]>(`/admin/coins/transactions?${qs.toString()}`);
 }
 
-export interface AnalyticsOverview {
-  stats: DashboardStats;
-  timeSeries: TimeSeriesDataPoint[];
-  topCategories: { name: string; count: number; percentage: number }[];
-  deviceBreakdown: { device: string; percentage: number }[];
-  hourlyActivity: { hour: number; users: number }[];
+export async function awardCoins(userId: string, amount: number, reason: string): Promise<Transaction> {
+  return fetcher<Transaction>("/admin/coins/award", {
+    method: "POST",
+    body: JSON.stringify({ userId, amount, reason }),
+  });
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   ACTIVITY LOG TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   LEADERBOARD
+   ═══════════════════════════════════════════════════════════════════════ */
 
-export type ActivityType = "quiz" | "user" | "system" | "security" | "content" | "coin";
-
-export interface ActivityLog {
-  id: string;
-  user: string;
-  userId?: string;
-  userAvatar?: string;
-  action: string;
-  target: string;
-  targetId?: string;
-  targetType?: string;
-  timestamp: string;
-  score?: number;
-  type: ActivityType;
-  metadata?: Record<string, unknown>;
+export async function getLeaderboard(period: "daily" | "weekly" | "monthly" = "weekly", limit = 10): Promise<LeaderboardEntry[]> {
+  return fetcher<LeaderboardEntry[]>(`/admin/leaderboard?period=${period}&limit=${limit}`);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   NOTIFICATION TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   ACTIVITY LOGS
+   ═══════════════════════════════════════════════════════════════════════ */
 
-export type NotificationType = "user" | "quiz" | "alert" | "security" | "system" | "achievement";
-
-export interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  timestamp: string;
-  type: NotificationType;
-  read: boolean;
-  actionUrl?: string;
-  imageUrl?: string;
-  sender?: {
-    name: string;
-    avatar?: string;
-  };
+export async function getActivityLogs(limit = 20): Promise<ActivityLog[]> {
+  return fetcher<ActivityLog[]>(`/admin/activity?limit=${limit}`);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   APPROVAL / MODERATION TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════════════ */
 
-export type ApprovalType = "user" | "quiz" | "question" | "content" | "report";
-export type ApprovalPriority = "low" | "medium" | "high" | "critical";
-export type ApprovalStatus = "pending" | "approved" | "rejected" | "escalated";
+export async function getNotifications(): Promise<NotificationItem[]> {
+  return fetcher<NotificationItem[]>("/admin/notifications");
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  return fetcher<void>(`/admin/notifications/${id}/read`, { method: "PATCH" });
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  return fetcher<void>("/admin/notifications/read-all", { method: "PATCH" });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APPROVALS
+   ═══════════════════════════════════════════════════════════════════════ */
 
 export interface ApprovalItem {
   id: string;
-  type: ApprovalType;
+  type: "user" | "quiz" | "content" | "report";
   title: string;
   subtitle: string;
-  description?: string;
   requestedBy: string;
-  requestedById?: string;
-  requesterAvatar?: string;
   timeAgo: string;
-  createdAt: string;
-  priority: ApprovalPriority;
-  status: ApprovalStatus;
-  reviewedBy?: string;
-  reviewNote?: string;
-  reviewDate?: string;
+  priority: "low" | "medium" | "high";
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   SYSTEM HEALTH TYPES
-   ────────────────────────────────────────────────────────────────────────── */
+export async function getPendingApprovals(): Promise<ApprovalItem[]> {
+  return fetcher<ApprovalItem[]>("/admin/approvals/pending");
+}
 
-export type HealthStatus = "healthy" | "warning" | "critical" | "unknown";
+export async function approveItem(id: string): Promise<void> {
+  return fetcher<void>(`/admin/approvals/${id}/approve`, { method: "POST" });
+}
+
+export async function rejectItem(id: string, reason?: string): Promise<void> {
+  return fetcher<void>(`/admin/approvals/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SYSTEM HEALTH
+   ═══════════════════════════════════════════════════════════════════════ */
 
 export interface HealthMetric {
   name: string;
-  value: number;        // 0-100
-  status: HealthStatus;
+  value: number;
+  status: "healthy" | "warning" | "critical";
   detail: string;
-  unit?: string;
-  threshold?: {
-    warning: number;
-    critical: number;
-  };
-  lastChecked: string;
 }
 
-export interface SystemHealth {
-  overall: number;      // 0-100 aggregate
-  status: HealthStatus;
-  uptime: number;       // percentage
-  metrics: HealthMetric[];
-  incidents: {
-    id: string;
-    title: string;
-    severity: HealthStatus;
-    startedAt: string;
-    resolvedAt?: string;
-    description?: string;
-  }[];
-  lastUpdated: string;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   AUDIT / SECURITY TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export interface AuditLogEntry {
-  id: string;
-  actor: string;
-  actorId: string;
-  actorRole: UserRole;
-  action: string;
-  resource: string;
-  resourceId: string;
-  ipAddress: string;
-  userAgent: string;
-  timestamp: string;
-  success: boolean;
-  details?: Record<string, unknown>;
-}
-
-export interface DeviceInfo {
-  id: string;
-  userId: string;
-  userName: string;
-  deviceName: string;
-  deviceType: string;
-  os: string;
-  browser: string;
-  ipAddress: string;
-  location?: string;
-  lastActive: string;
-  trusted: boolean;
-  current: boolean;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   COMMUNICATION TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export interface BroadcastMessage {
-  id: string;
-  title: string;
-  body: string;
-  type: "announcement" | "reminder" | "alert" | "update";
-  audience: "all" | "role" | "users";
-  targetRoles?: UserRole[];
-  targetUserIds?: string[];
-  sentBy: string;
-  sentAt: string;
-  scheduledAt?: string;
-  readCount: number;
-  totalRecipients: number;
-  status: "draft" | "scheduled" | "sent" | "cancelled";
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   SETTINGS / CONFIG TYPES
-   ────────────────────────────────────────────────────────────────────────── */
-
-export interface PlatformSettings {
-  general: {
-    platformName: string;
-    supportEmail: string;
-    maxQuizAttempts: number;
-    defaultTimeLimit: number;
-    allowGuestAccess: boolean;
-  };
-  gamification: {
-    coinsEnabled: boolean;
-    streakEnabled: boolean;
-    leaderboardEnabled: boolean;
-    achievementsEnabled: boolean;
-    dailyBonusAmount: number;
-    streakBonusMultiplier: number;
-  };
-  security: {
-    requireEmailVerification: boolean;
-    mfaEnabled: boolean;
-    sessionTimeout: number; // minutes
-    maxLoginAttempts: number;
-    passwordMinLength: number;
-  };
-  notifications: {
-    emailEnabled: boolean;
-    pushEnabled: boolean;
-    digestFrequency: "realtime" | "hourly" | "daily";
-  };
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   API RESPONSE WRAPPERS
-   ────────────────────────────────────────────────────────────────────────── */
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  meta?: {
-    page?: number;
-    totalPages?: number;
-    total?: number;
-    limit?: number;
-  };
-}
-
-export interface ApiError {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, string[]>;
-  };
+export async function getSystemHealth(): Promise<{ overall: number; metrics: HealthMetric[] }> {
+  return fetcher<{ overall: number; metrics: HealthMetric[] }>("/admin/system/health");
 }

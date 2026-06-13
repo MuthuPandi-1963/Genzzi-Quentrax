@@ -9,8 +9,6 @@ export * from './CoinsHistory';
 export * from './Question';
 export * from './Quiz';
 export * from './QuizHistory';
-export * from './Session';
 export * from './Topic';
 export * from './User';
-export * from './UserAuth';
 export * from './UserProfile';

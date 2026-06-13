@@ -1,8 +1,8 @@
 // Auto-generated from Prisma model: AssessmentAssignment
 
+import { Assessment } from './assessment.types';
 import { AssignmentStatus } from './enums';
 
-import { Assessment } from './Assessment';
 import { UserProfile } from './UserProfile';
 
 export interface AssessmentAssignment {
