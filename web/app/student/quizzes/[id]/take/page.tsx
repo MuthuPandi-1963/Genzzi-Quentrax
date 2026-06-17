@@ -166,55 +166,45 @@ export default function QuizTakePage() {
 
   return (
     <SecureQuizWrapper isAssessment={isAssessment}>
-      <div className="min-h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-[#0B0A10]">
         {/* ═══ TOP BAR ════════════════════════════════════════ */}
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="glass-card-sm border-b border-[var(--color-border)] sticky top-0 z-40"
-        >
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/quizzes")}
-                className="p-2 rounded-lg bg-[var(--color-muted)] text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </motion.button>
-              <div>
-                <h1 className="text-sm font-bold text-[var(--color-foreground)] truncate max-w-[200px] md:max-w-md">
-                  {session.quizTitle}
-                </h1>
-                <p className="text-xs text-[var(--color-foreground-muted)]">
-                  Question {currentIndex + 1} of {session.questions.length}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block w-48">
-                <QuizTimer durationMinutes={session.timeLimit} onExpire={handleTimerExpire} />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowSubmitModal(true)}
-                className="gradient-primary px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Submit
-              </motion.button>
+        <header className="h-16 bg-white dark:bg-gray-900 border-b border-black/10 dark:border-white/10 flex items-center justify-between px-6 shrink-0 z-40">
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/quizzes")}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+            <div className="hidden sm:block">
+              <h1 className="text-lg font-bold truncate max-w-[200px] md:max-w-md text-gray-900 dark:text-white">
+                {session.quizTitle}
+              </h1>
             </div>
           </div>
-          <div className="md:hidden px-4 pb-3">
-            <QuizTimer durationMinutes={session.timeLimit} onExpire={handleTimerExpire} />
+          
+          <div className="flex items-center gap-4">
+            <div className="w-auto">
+              <QuizTimer durationMinutes={session.timeLimit} onExpire={handleTimerExpire} />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowSubmitModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold transition-colors flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Submit Quiz</span>
+            </motion.button>
           </div>
-        </motion.div>
+        </header>
 
         {/* ═══ MAIN CONTENT ═════════════════════════════════ */}
-        <div className="flex-1 container mx-auto px-4 py-6">
-          <div className="grid lg:grid-cols-12 gap-6">
+        <main className="flex-1 overflow-auto p-4 md:p-8 flex justify-center items-start">
+          <div className="w-full max-w-6xl pt-8 grid lg:grid-cols-12 gap-8">
+            
             {/* ─── Left Sidebar: Navigator ───────────────────── */}
             <div className="lg:col-span-3 hidden lg:block">
               <QuestionNavigator
@@ -226,12 +216,27 @@ export default function QuizTakePage() {
             </div>
 
             {/* ─── Center: Question Card ─────────────────────── */}
-            <div className="lg:col-span-9">
-              <div className="glass-card-lg p-6 md:p-8 relative overflow-hidden">
-                <div className="absolute top-4 right-4">
-                  <span className="text-xs font-bold text-[var(--color-foreground-muted)] bg-[var(--color-muted)] px-3 py-1 rounded-full">
-                    {currentIndex + 1} / {session.questions.length}
+            <div className="lg:col-span-9 w-full">
+              <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-3xl p-8 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-purple-600 dark:text-purple-400 font-bold tracking-wider text-sm uppercase">
+                    QUESTION {currentIndex + 1} OF {session.questions.length}
                   </span>
+                  <div className="flex items-center gap-4">
+                    <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-xs font-bold text-gray-500">
+                      {currentQuestion.points} PTS
+                    </span>
+                    <button 
+                      onClick={toggleFlag}
+                      className={`p-2 rounded-full transition-colors ${
+                        isFlagged 
+                          ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' 
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-800 hover:text-gray-600'
+                      }`}
+                    >
+                      <Bookmark className="w-5 h-5" fill={isFlagged ? 'currentColor' : 'none'} />
+                    </button>
+                  </div>
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -250,7 +255,7 @@ export default function QuizTakePage() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={revealHint}
-                      className="text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors flex items-center gap-1"
+                      className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline transition-colors flex items-center gap-1"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       {showHints.has(currentQuestion.id) ? "Hide Hint" : "Need a hint?"}
@@ -263,7 +268,7 @@ export default function QuizTakePage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-2 p-3 rounded-lg bg-[var(--color-info)]/10 border border-[var(--color-info)]/20 text-sm text-[var(--color-info)]">
+                          <div className="mt-2 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/20 text-sm text-purple-800 dark:text-purple-300">
                             {currentQuestion.hints[0]}
                           </div>
                         </motion.div>
@@ -272,53 +277,31 @@ export default function QuizTakePage() {
                   </div>
                 )}
 
-                {/* Navigation */}
+                {/* Navigation Buttons */}
                 <div className="mt-8 flex items-center justify-between">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     onClick={goPrev}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-white dark:bg-gray-800 border border-black/10 dark:border-white/10 disabled:opacity-50 transition-colors"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={toggleFlag}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      isFlagged
-                        ? "bg-[var(--color-warning)]/15 text-[var(--color-warning)] border border-[var(--color-warning)]/30"
-                        : "text-[var(--color-foreground-muted)] hover:text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10"
-                    }`}
-                  >
-                    {isFlagged ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-                    {isFlagged ? "Flagged" : "Flag for review"}
-                  </motion.button>
+                    <ChevronLeft className="w-5 h-5" /> Previous
+                  </button>
 
                   {currentIndex === session.questions.length - 1 ? (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
                       onClick={() => setShowSubmitModal(true)}
-                      className="gradient-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2"
                     >
                       <Send className="w-4 h-4" />
-                      Submit Quiz
-                    </motion.button>
+                      Submit
+                    </button>
                   ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
                       onClick={goNext}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-foreground)] bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/20 transition-all"
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-white dark:bg-gray-800 border border-black/10 dark:border-white/10 disabled:opacity-50 transition-colors"
                     >
-                      Next
-                      <ChevronRight className="w-4 h-4" />
-                    </motion.button>
+                      Next <ChevronRight className="w-5 h-5" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -334,7 +317,7 @@ export default function QuizTakePage() {
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
 
       {/* Submit Modal */}
@@ -354,12 +337,12 @@ export default function QuizTakePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-[var(--color-background)]/90 backdrop-blur-xl"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-white/90 dark:bg-[#0B0A10]/90 backdrop-blur-sm"
           >
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center flex flex-col items-center">
-              <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)] mb-4" />
-              <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-1">Submitting...</h3>
-              <p className="text-sm text-[var(--color-foreground-muted)]">Grading your answers</p>
+              <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Submitting...</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Grading your answers</p>
             </motion.div>
           </motion.div>
         )}

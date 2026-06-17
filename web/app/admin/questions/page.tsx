@@ -9,10 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Question } from "@/@types";
 import { useQuestions } from "@/hooks";
 import { useConfirm } from "@/context/confirm.dialog.context";
-import { QuestionFormData } from "@/components/forms";
 import { toast } from "sonner";
 import { LoadingDialog } from "@/components/custom/LoadingDailog";
 import QuestionForm from "@/components/forms/QuestionForm";
+import QuestionBulkImportForm from "@/components/forms/QuestionBulkImportForm";
 import QuestionTable from "./_table";
 import { Difficulty, QuestionStatus, QuestionType } from "@/@types/enums";
 
@@ -61,6 +61,7 @@ export default function QuestionPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [editing, setEditing] = useState<Question | null>(null);
   const [formData, setFormData] = useState<QuestionFormData>(EMPTY_FORM);
 
@@ -177,13 +178,23 @@ export default function QuestionPage() {
             Create and manage quiz questions across all topics
           </p>
         </div>
-        <Button
-          onClick={openCreate}
-          className="gradient-primary gap-2 w-full sm:w-auto justify-center text-white font-semibold"
-        >
-          <Plus className="h-4 w-4" />
-          Add Question
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            onClick={() => setIsBulkImportOpen(true)}
+            variant="outline"
+            className="gap-2 w-full sm:w-auto justify-center font-semibold"
+          >
+            <Plus className="h-4 w-4" />
+            Bulk Import
+          </Button>
+          <Button
+            onClick={openCreate}
+            className="gradient-primary gap-2 w-full sm:w-auto justify-center text-white font-semibold"
+          >
+            <Plus className="h-4 w-4" />
+            Add Question
+          </Button>
+        </div>
       </motion.div>
 
       {/* ── Stat Cards ── */}
@@ -307,6 +318,12 @@ export default function QuestionPage() {
         setFormData={setFormData}
         handleSubmit={handleSubmit}
         onClose={handleClose}
+      />
+
+      {/* ── Bulk Import Form ── */}
+      <QuestionBulkImportForm
+        bulkQuestions={isBulkImportOpen}
+        setBulkQuestions={setIsBulkImportOpen}
       />
     </div>
   );

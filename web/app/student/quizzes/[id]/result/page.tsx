@@ -51,8 +51,9 @@ export default function QuizResultPage({ params }: { params: Promise<{ id: strin
   const quiz = result.quiz;
   const answers = Array.isArray(result.answers) ? result.answers : [];
   
-  // Example for calculating if passed, we can say >= 70% is passing
-  const isPassing = result.score >= 70;
+  // Use real passing score from the quiz, fallback to 70 if not available
+  const passingScore = quiz?.passingScore ?? 70;
+  const isPassing = result.score >= passingScore;
 
   return (
     <StudentLayout>

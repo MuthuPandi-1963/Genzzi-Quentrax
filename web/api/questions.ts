@@ -18,7 +18,7 @@ export const QuestionAPI = {
   create: (data: QuestionFormData) => axiosInstance.post(`/${url}`, data),
 
   // Create multiple questions
-  createMany: (data: QuestionFormData[]) => axiosInstance.post(`/${url}/many`, data),
+  createMany: (data: QuestionFormData[]) => axiosInstance.post(`/${url}/many`, { questions: data }),
 
   // Update question
   update: (id: string, data: Partial<QuestionFormData>) => axiosInstance.put(`/${url}/${id}`, data),

@@ -80,9 +80,15 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
           const days = daysUntil(a.dueDate);
           const StatusIcon = s.icon;
 
+          const getHref = (status: string, id: string) => {
+            if (status === "COMPLETED") return `/student/results/${id}`;
+            if (status === "PENDING" || status === "IN_PROGRESS") return `/student/assessments/${id}/take`;
+            return "#";
+          };
+
           return (
-            <motion.div
-              key={a.id}
+            <Link key={a.id} href={getHref(a.status, a.id)} className="block focus:outline-none">
+              <motion.div
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.07 }}
@@ -145,7 +151,8 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
                   </div>
                 )}
               </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           );
         })}
       </div>

@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import type { Assessment, AssessmentQuestionRelation } from "@/@types/assessment.types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axiosInstance";
+import QuestionBulkImportForm from "@/components/forms/QuestionBulkImportForm";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ export default function AssignQuestions({ assessment }: AssignQuestionsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch all available questions
@@ -185,12 +187,25 @@ export default function AssignQuestions({ assessment }: AssignQuestionsProps) {
               {selectedIds.size} selected
             </Badge>
           </div>
-          <DialogTitle className="text-xl font-bold text-(--color-foreground)">
-            Assign Questions
-          </DialogTitle>
-          <DialogDescription className="text-sm text-(--color-foreground-muted)">
-            Select questions to link to <span className="font-semibold text-(--color-foreground)">{assessment.title}</span>
-          </DialogDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <DialogTitle className="text-xl font-bold text-(--color-foreground)">
+                Assign Questions
+              </DialogTitle>
+              <DialogDescription className="text-sm text-(--color-foreground-muted)">
+                Select questions to link to <span className="font-semibold text-(--color-foreground)">{assessment.title}</span>
+              </DialogDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBulkImportOpen(true)}
+              className="gap-2 font-semibold"
+            >
+              <Plus className="h-4 w-4" />
+              Bulk Import
+            </Button>
+          </div>
         </DialogHeader>
 
         {/* ── Search ── */}
@@ -338,6 +353,16 @@ export default function AssignQuestions({ assessment }: AssignQuestionsProps) {
           </div>
         </div>
       </DialogContent>
+
+      <QuestionBulkImportForm
+        bulkQuestions={isBulkImportOpen}
+        setBulkQuestions={(open) => {
+          setIsBulkImportOpen(open);
+          if (!open) {
+            queryClient.invalidateQueries({ queryKey: ["questions", "all"] });
+          }
+        }}
+      />
     </Dialog>
   );
 }
