@@ -2,7 +2,7 @@
 
 import { UserRole } from './enums';
 
-import { Assessment } from './Assessment';
+import { Assessment } from './assessment.types';
 import { AssessmentAssignment } from './AssessmentAssignment';
 import { AssessmentAttempt } from './AssessmentAttempt';
 import { AuditLog } from './AuditLog';

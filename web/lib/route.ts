@@ -18,6 +18,8 @@ export const ROLE_ROUTES: Record<UserRole, { path: string; label: string }[]> = 
     { path: "/student/quizzes/:id/take", label: "Quizzes" },
     { path: "/student/topics", label: "Topics" },
     { path: "/student/categories", label: "Categories" },
+    { path: "/student/categories/:id", label: "Categories" },
+
     { path: "/profile", label: "Profile" },
     { path: "/leaderboard", label: "Leaderboard" },
   ],

@@ -59,7 +59,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
 
       {/* ── Right: Content ── */}
       <div className="flex-1 flex flex-col p-5 relative">
-        <Link href={`/topics/${topic.id}`} className="absolute inset-0 z-10">
+        <Link href={` /topics/${topic.id}`} className="absolute inset-0 z-10">
           <span className="sr-only">View {topic.name}</span>
         </Link>
 

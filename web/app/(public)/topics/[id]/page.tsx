@@ -158,7 +158,7 @@ export default function TopicDetailPage() {
                       key={quiz.id}
                       quiz={quiz as unknown as QuizCardProps["quiz"]}
                       actionText={isAuthenticated ? "Start Quiz" : "Login to Take Quiz"}
-                      actionHref={isAuthenticated ? "/" : "/login"}
+                      actionHref={isAuthenticated ? `/quizzes/${quiz.id}` : "/login"}
                     />
                   ))}
                 </div>
@@ -211,7 +211,7 @@ export default function TopicDetailPage() {
                 </p>
 
                 <Link
-                  href={isAuthenticated ? "/" : "/login"}
+                  href={isAuthenticated ? "/student/quizzes/${quizzId}/take" : "/login"}
                   className="
                     flex items-center justify-center gap-2
                     w-full py-3 bg-blue-600 hover:bg-blue-700

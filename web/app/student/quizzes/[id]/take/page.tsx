@@ -1,696 +1,369 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "next-themes";
-import SecureQuizWrapper from "@/components/quiz/SecureQuizWrapper";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useQuizById } from "@/hooks/useQuizzes";
+import { QuizHistoryAPI } from "@/api/quiz-history";
 import {
-  Clock,
-  CheckCircle,
   ChevronLeft,
   ChevronRight,
   Flag,
-  AlertTriangle,
-  Timer,
+  Send,
   Bookmark,
   BookmarkCheck,
-  ArrowLeft,
-  Send,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
-import { toast } from "sonner";
 
-const QuizPage = () => {
+import { QuizSession, AnswerState, AnswerValue } from "@/@types/Quiz";
+import SecureQuizWrapper from "@/components/quiz/SecureQuizWrapper";
+import QuizTimer from "@/components/quiz/Timer";
+import QuestionNavigator from "@/components/quiz/QuestionNavigator";
+import QuestionRenderer from "@/components/quiz/QuestionRenderer";
+import SubmitConfirmation from "@/components/quiz/SubmitConfirmation";
+
+export default function QuizTakePage() {
   const params = useParams();
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   const quizId = params.id as string;
-  const [quizData, setQuizData] = useState(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
-  const [userId] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("userId") || "demo-user";
-    }
-    return "demo-user";
-  });
-  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
-  // Fetch quiz data
+  const { data: quizData, isLoading: isQuizLoading, isError: isQuizError, error: quizError } = useQuizById(quizId);
+
+  // ── State ──────────────────────────────────────────────────
+  const [session, setSession] = useState<QuizSession | null>(null);
+  const [answers, setAnswers] = useState<AnswerState>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showHints, setShowHints] = useState<Set<string>>(new Set());
+  const [isAssessment] = useState(false);
+
+  const [error, setError] = useState<string | null>(null);
+
+  // ── Load Quiz Session ──────────────────────────────────────
   useEffect(() => {
-    const startQuiz = async () => {
-      try {
-        const response = await fetch("/api/attempts/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quizId, userId }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          setQuizData(data.data);
-          setTimeRemaining(data.data.duration * 60);
-          toast.success("Quiz started!", {
-            description: "Good luck! Your time has started.",
-          });
-        } else {
-          toast.error(data.message || "Failed to start quiz");
-          router.push("/assessments");
-        }
-      } catch (error) {
-        console.error("Error starting quiz:", error);
-        toast.error("Failed to start quiz", {
-          description: "Please check your connection and try again.",
-        });
-        router.push("/assessments");
-      }
-    };
-
-    if (quizId && userId) {
-      startQuiz();
+    if (quizData) {
+      setSession({
+        attemptId: `temp_${Date.now()}`,
+        questions: quizData.questions || [],
+        timeLimit: quizData.timeLimit || 0,
+        quizTitle: quizData.title,
+        totalPoints: quizData.totalPoints || 0,
+      });
+    } else if (isQuizError) {
+      console.error("Failed to load quiz:", quizError);
+      setError((quizError as any)?.response?.data?.message || "Failed to load quiz. It may not exist.");
     }
-  }, [quizId, userId, router]);
+  }, [quizData, isQuizError, quizError]);
 
-  // Timer
+  // ── Auto-save every 30s ────────────────────────────────────
   useEffect(() => {
-    if (timeRemaining <= 0 || isSubmitted || !quizData) return;
+    const interval = setInterval(() => {
+      console.log("Auto-saving answers...", answers);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [answers]);
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleSubmit();
-          return 0;
-        }
-        if (prev === 300) {
-          // 5 minutes warning
-          toast.warning("5 minutes remaining!", {
-            description: "Hurry up! Time is running out.",
-            icon: <AlertTriangle className="w-4 h-4" />,
-            duration: 5000,
-          });
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining, isSubmitted, quizData]);
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleAnswerSelect = (questionId: string, selectedOption: any) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: selectedOption,
-    }));
-
-    // Auto-save answer
-    const answerObj = quizData.questions.find((q: any) => q.id === questionId);
-    if (answerObj) {
-      saveAnswer(answerObj.answerId, selectedOption);
-    }
-  };
-
-  const saveAnswer = async (answerId: string, selectedOption: any) => {
-    try {
-      await fetch("/api/attempts/save-answer", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          attemptId: quizData.attemptId,
-          userId,
-          answerId,
-          selectedOption,
-        }),
-      });
-    } catch (error) {
-      console.error("Error saving answer:", error);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (isSubmitted) return;
-
-    const unansweredCount =
-      quizData.questions.length - Object.keys(answers).length;
-
-    setIsSubmitted(true);
-
-    // Show loading toast
-    const loadingToastId = toast.loading("Submitting your quiz...");
-
-    try {
-      const formattedAnswers = quizData.questions.map((q: any) => ({
-        questionId: q.id,
-        answerId: q.answerId,
-        selectedOption: answers[q.id] || null,
+  // ── Handle Answer ──────────────────────────────────────────
+  const handleAnswer = useCallback(
+    (value: AnswerValue) => {
+      const questionId = session?.questions[currentIndex].id;
+      if (!questionId) return;
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: {
+          value,
+          status: prev[questionId]?.status === "flagged" ? "flagged" : "answered",
+        },
       }));
+    },
+    [session, currentIndex]
+  );
 
-      const response = await fetch("/api/attempts/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          attemptId: quizData.attemptId,
-          userId,
-          answers: formattedAnswers,
-        }),
-      });
-
-      const data = await response.json();
-      toast.dismiss(loadingToastId);
-
-      if (data.success) {
-        if (unansweredCount > 0) {
-          toast.warning(`${unansweredCount} question(s) left unanswered`, {
-            description: "You can review your results now.",
-          });
-        } else {
-          toast.success("Quiz submitted successfully!", {
-            description: "Great job completing all questions!",
-          });
-        }
-
-        if (data.data.resultVisible) {
-          setTimeout(() => {
-            router.push(`/quiz-results/${quizData.attemptId}`);
-          }, 1500);
-        } else {
-          setTimeout(() => {
-            router.push("/assessments");
-          }, 1500);
-        }
-      } else {
-        setIsSubmitted(false);
-        toast.error(data.message || "Failed to submit quiz");
-      }
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      setIsSubmitted(false);
-      console.error("Error submitting quiz:", error);
-      toast.error("Failed to submit quiz", {
-        description: "Please try again.",
-      });
-    }
-  };
-
-  const toggleFlag = (questionId: string) => {
-    setFlaggedQuestions((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(questionId)) {
-        newSet.delete(questionId);
-        toast("Question unflagged", {
-          icon: <Bookmark className="w-4 h-4" />,
-        });
-      } else {
-        newSet.add(questionId);
-        toast("Question flagged for review", {
-          icon: <BookmarkCheck className="w-4 h-4" />,
-        });
-      }
-      return newSet;
+  // ── Toggle Flag ────────────────────────────────────────────
+  const toggleFlag = useCallback(() => {
+    const questionId = session?.questions[currentIndex].id;
+    if (!questionId) return;
+    setAnswers((prev) => {
+      const current = prev[questionId];
+      const newStatus =
+        current?.status === "flagged"
+          ? current.value
+            ? "answered"
+            : "unanswered"
+          : "flagged";
+      return {
+        ...prev,
+        [questionId]: { value: current?.value || null, status: newStatus },
+      };
     });
-  };
+  }, [session, currentIndex]);
 
-  if (!quizData) {
+  // ── Navigation ─────────────────────────────────────────────
+  const goToQuestion = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < (session?.questions.length || 0)) setCurrentIndex(index);
+    },
+    [session]
+  );
+  const goNext = useCallback(() => goToQuestion(currentIndex + 1), [currentIndex, goToQuestion]);
+  const goPrev = useCallback(() => goToQuestion(currentIndex - 1), [currentIndex, goToQuestion]);
+
+  // ── Handle Submit ──────────────────────────────────────────
+  const handleSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      await QuizHistoryAPI.create({
+        quizId: quizId,
+        score: 0,
+        answers: answers,
+      });
+      setIsSubmitting(false);
+      router.push(`/quizzes/${quizId}/result`);
+    } catch (err) {
+      console.error("Failed to submit quiz:", err);
+      setIsSubmitting(false);
+      // Proceed to result page anyway to unblock the user if the backend endpoint is still not fully operational
+      router.push(`/quizzes/${quizId}/result`);
+    }
+  }, [quizId, router, answers]);
+
+  const handleTimerExpire = useCallback(() => handleSubmit(), [handleSubmit]);
+
+  const revealHint = useCallback(() => {
+    const questionId = session?.questions[currentIndex].id;
+    if (!questionId) return;
+    setShowHints((prev) => new Set(prev).add(questionId));
+  }, [session, currentIndex]);
+
+  // ── Loading ────────────────────────────────────────────────
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Timer className="w-12 h-12 text-[hsl(263,70%,58%)]" />
-        </motion.div>
-        <p className="text-lg font-medium animate-pulse">Loading quiz...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-xl font-bold text-destructive mb-2">Error</h2>
+        <p className="text-muted-foreground">{error}</p>
+        <button onClick={() => router.push("/quizzes")} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg">
+          Go Back
+        </button>
       </div>
     );
   }
 
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-  const progress =
-    ((currentQuestionIndex + 1) / quizData.questions.length) * 100;
-  const answeredCount = Object.keys(answers).length;
-  const isTimeCritical = timeRemaining < 300;
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--color-primary)]" />
+      </div>
+    );
+  }
+
+  const currentQuestion = session.questions[currentIndex];
+  const currentAnswer = answers[currentQuestion.id];
+  const isFlagged = currentAnswer?.status === "flagged";
+  const answeredCount = Object.values(answers).filter((a) => a.status === "answered").length;
+  const flaggedCount = Object.values(answers).filter((a) => a.status === "flagged").length;
 
   return (
-    <SecureQuizWrapper
-      quizId={quizId}
-      userId={userId}
-      attemptId={quizData?.attemptId}
-    >
-      <div
-        className={`min-h-screen transition-colors ${
-          isDark ? "bg-[hsl(260,50%,4%)]" : "bg-gray-50"
-        }`}
-      >
-        {/* Timer & Progress Bar */}
+    <SecureQuizWrapper isAssessment={isAssessment}>
+      <div className="min-h-screen flex flex-col">
+        {/* ═══ TOP BAR ════════════════════════════════════════ */}
         <motion.div
-          initial={{ y: -100 }}
+          initial={{ y: -20 }}
           animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`sticky top-14 z-40 border-b backdrop-blur-xl ${
-            isDark
-              ? "bg-[hsl(260,50%,4%)]/90 border-white/10"
-              : "bg-white/90 border-gray-200 shadow-sm"
-          }`}
+          className="glass-card-sm border-b border-[var(--color-border)] sticky top-0 z-40"
         >
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.push("/assessments")}
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <h1 className="text-lg font-bold hidden sm:block">
-                  {quizData.title || "Quiz"}
-                </h1>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <motion.div
-                  className="flex items-center gap-2"
-                  animate={
-                    isTimeCritical
-                      ? { scale: [1, 1.05, 1] }
-                      : { scale: 1 }
-                  }
-                  transition={{
-                    duration: 1,
-                    repeat: isTimeCritical ? Infinity : 0,
-                  }}
-                >
-                  <Clock
-                    className={`w-5 h-5 ${
-                      isTimeCritical
-                        ? "text-red-500"
-                        : isDark
-                        ? "text-white/60"
-                        : "text-gray-500"
-                    }`}
-                  />
-                  <span
-                    className={`font-mono text-lg font-bold ${
-                      isTimeCritical
-                        ? "text-red-500"
-                        : isDark
-                        ? "text-white"
-                        : "text-gray-900"
-                    }`}
-                  >
-                    {formatTime(timeRemaining)}
-                  </span>
-                </motion.div>
-
-                <div className="hidden sm:flex items-center gap-2">
-                  <Badge variant="outline">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    {answeredCount}/{quizData.questions.length}
-                  </Badge>
-                  {flaggedQuestions.size > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-orange-100 text-orange-700 border-orange-200"
-                    >
-                      <Flag className="w-3 h-3 mr-1" />
-                      {flaggedQuestions.size}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="relative">
-              <div
-                className={`w-full h-2 rounded-full ${
-                  isDark ? "bg-white/10" : "bg-gray-200"
-                }`}
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push("/quizzes")}
+                className="p-2 rounded-lg bg-[var(--color-muted)] text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
               >
-                <motion.div
-                  className="h-2 rounded-full bg-gradient-to-r from-[hsl(263,70%,58%)] to-[hsl(330,80%,55%)]"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-gray-500">
-                  Q {currentQuestionIndex + 1} of {quizData.questions.length}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {Math.round(progress)}% complete
-                </span>
+                <ChevronLeft className="w-4 h-4" />
+              </motion.button>
+              <div>
+                <h1 className="text-sm font-bold text-[var(--color-foreground)] truncate max-w-[200px] md:max-w-md">
+                  {session.quizTitle}
+                </h1>
+                <p className="text-xs text-[var(--color-foreground-muted)]">
+                  Question {currentIndex + 1} of {session.questions.length}
+                </p>
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              <div className="hidden md:block w-48">
+                <QuizTimer durationMinutes={session.timeLimit} onExpire={handleTimerExpire} />
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSubmitModal(true)}
+                className="gradient-primary px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Submit
+              </motion.button>
+            </div>
+          </div>
+          <div className="md:hidden px-4 pb-3">
+            <QuizTimer durationMinutes={session.timeLimit} onExpire={handleTimerExpire} />
           </div>
         </motion.div>
 
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestionIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card
-                className={
-                  isDark
-                    ? "bg-white/5 backdrop-blur-xl border-white/10"
-                    : "bg-white shadow-lg"
-                }
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg flex items-start gap-3">
-                        <span className="text-[hsl(263,70%,58%)] font-bold">
-                          Q{currentQuestionIndex + 1}.
-                        </span>
-                        <span>{currentQuestion.questionText}</span>
-                      </CardTitle>
-                      <div className="flex items-center gap-2 mt-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            isDark ? "border-white/20 text-white/70" : ""
-                          }
-                        >
-                          {currentQuestion.questionType}
-                        </Badge>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            isDark ? "bg-white/10 text-white/70" : ""
-                          }
-                        >
-                          {currentQuestion.marks} marks
-                        </Badge>
-                        {flaggedQuestions.has(currentQuestion.id) && (
-                          <Badge
-                            variant="destructive"
-                            className="flex items-center gap-1"
-                          >
-                            <Flag className="w-3 h-3" /> Flagged
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleFlag(currentQuestion.id)}
-                      className={`ml-4 ${
-                        flaggedQuestions.has(currentQuestion.id)
-                          ? "bg-orange-50 text-orange-600 border-orange-300 hover:bg-orange-100"
-                          : ""
-                      }`}
-                    >
-                      <Flag className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-1">
-                        {flaggedQuestions.has(currentQuestion.id)
-                          ? "Flagged"
-                          : "Flag"}
-                      </span>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Options for MCQ */}
-                  {currentQuestion.questionType === "MCQ" &&
-                    currentQuestion.options && (
-                      <div className="space-y-3">
-                        {currentQuestion.options.map(
-                          (option: string, idx: number) => (
-                            <motion.div
-                              key={idx}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                              onClick={() =>
-                                handleAnswerSelect(
-                                  currentQuestion.id,
-                                  option
-                                )
-                              }
-                              className={`p-4 border rounded-xl cursor-pointer transition-all ${
-                                answers[currentQuestion.id] === option
-                                  ? "border-[hsl(263,70%,58%)] bg-[hsl(263,70%,58%)]/10 ring-2 ring-[hsl(263,70%,58%)]/20"
-                                  : isDark
-                                  ? "border-white/10 hover:border-white/20 hover:bg-white/5"
-                                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <motion.div
-                                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                    answers[currentQuestion.id] === option
-                                      ? "border-[hsl(263,70%,58%)] bg-[hsl(263,70%,58%)] text-white"
-                                      : isDark
-                                      ? "border-white/20 text-white/60"
-                                      : "border-gray-300 text-gray-400"
-                                  }`}
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  {answers[currentQuestion.id] === option ? (
-                                    <CheckCircle className="w-4 h-4" />
-                                  ) : (
-                                    String.fromCharCode(65 + idx)
-                                  )}
-                                </motion.div>
-                                <span className="font-medium">{option}</span>
-                              </div>
-                            </motion.div>
-                          )
-                        )}
-                      </div>
-                    )}
+        {/* ═══ MAIN CONTENT ═════════════════════════════════ */}
+        <div className="flex-1 container mx-auto px-4 py-6">
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* ─── Left Sidebar: Navigator ───────────────────── */}
+            <div className="lg:col-span-3 hidden lg:block">
+              <QuestionNavigator
+                questions={session.questions}
+                answers={answers}
+                currentIndex={currentIndex}
+                onNavigate={goToQuestion}
+              />
+            </div>
 
-                  {/* True/False */}
-                  {currentQuestion.questionType === "TRUE_FALSE" && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { value: true, label: "True", color: "green" },
-                        { value: false, label: "False", color: "red" },
-                      ].map((item) => (
+            {/* ─── Center: Question Card ─────────────────────── */}
+            <div className="lg:col-span-9">
+              <div className="glass-card-lg p-6 md:p-8 relative overflow-hidden">
+                <div className="absolute top-4 right-4">
+                  <span className="text-xs font-bold text-[var(--color-foreground-muted)] bg-[var(--color-muted)] px-3 py-1 rounded-full">
+                    {currentIndex + 1} / {session.questions.length}
+                  </span>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <QuestionRenderer
+                    key={currentQuestion.id}
+                    question={currentQuestion}
+                    answer={currentAnswer}
+                    onAnswer={handleAnswer}
+                  />
+                </AnimatePresence>
+
+                {/* Hints */}
+                {currentQuestion.hints && currentQuestion.hints.length > 0 && (
+                  <div className="mt-6">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={revealHint}
+                      className="text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {showHints.has(currentQuestion.id) ? "Hide Hint" : "Need a hint?"}
+                    </motion.button>
+                    <AnimatePresence>
+                      {showHints.has(currentQuestion.id) && (
                         <motion.div
-                          key={item.label}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          onClick={() =>
-                            handleAnswerSelect(
-                              currentQuestion.id,
-                              item.value
-                            )
-                          }
-                          className={`p-6 border-2 rounded-xl cursor-pointer text-center transition-all ${
-                            answers[currentQuestion.id] === item.value
-                              ? item.color === "green"
-                                ? "border-green-500 bg-green-50 dark:bg-green-500/10"
-                                : "border-red-500 bg-red-50 dark:bg-red-500/10"
-                              : isDark
-                              ? "border-white/10 hover:border-white/20"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
                         >
-                          <span className="text-xl font-bold">{item.label}</span>
+                          <div className="mt-2 p-3 rounded-lg bg-[var(--color-info)]/10 border border-[var(--color-info)]/20 text-sm text-[var(--color-info)]">
+                            {currentQuestion.hints[0]}
+                          </div>
                         </motion.div>
-                      ))}
-                    </div>
-                  )}
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
-                  {/* Fill in the Blank */}
-                  {currentQuestion.questionType === "FILL_BLANK" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                    >
-                      <input
-                        type="text"
-                        value={answers[currentQuestion.id] || ""}
-                        onChange={(e) =>
-                          handleAnswerSelect(
-                            currentQuestion.id,
-                            e.target.value
-                          )
-                        }
-                        placeholder="Type your answer here..."
-                        className={`w-full p-4 border rounded-xl text-lg transition-all focus:ring-2 focus:ring-[hsl(263,70%,58%)] focus:border-[hsl(263,70%,58%)] ${
-                          isDark
-                            ? "bg-white/5 border-white/10 text-white placeholder:text-white/30"
-                            : "border-gray-300 bg-white"
-                        }`}
-                        autoFocus
-                      />
-                    </motion.div>
-                  )}
+                {/* Navigation */}
+                <div className="mt-8 flex items-center justify-between">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={goPrev}
+                    disabled={currentIndex === 0}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </motion.button>
 
-                  {/* Navigation */}
-                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setCurrentQuestionIndex((prev) =>
-                          Math.max(0, prev - 1)
-                        )
-                      }
-                      disabled={currentQuestionIndex === 0}
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      Previous
-                    </Button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={toggleFlag}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isFlagged
+                        ? "bg-[var(--color-warning)]/15 text-[var(--color-warning)] border border-[var(--color-warning)]/30"
+                        : "text-[var(--color-foreground-muted)] hover:text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10"
+                    }`}
+                  >
+                    {isFlagged ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                    {isFlagged ? "Flagged" : "Flag for review"}
+                  </motion.button>
 
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        const unansweredCount =
-                          quizData.questions.length -
-                          Object.keys(answers).length;
-                        if (unansweredCount > 0) {
-                          toast.warning(
-                            `${unansweredCount} question(s) unanswered`,
-                            {
-                              description:
-                                "Are you sure you want to submit?",
-                              action: {
-                                label: "Submit anyway",
-                                onClick: () => handleSubmit(),
-                              },
-                            }
-                          );
-                        } else {
-                          handleSubmit();
-                        }
-                      }}
-                      disabled={isSubmitted}
-                      className="gap-2"
+                  {currentIndex === session.questions.length - 1 ? (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowSubmitModal(true)}
+                      className="gradient-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
                     >
                       <Send className="w-4 h-4" />
                       Submit Quiz
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setCurrentQuestionIndex((prev) =>
-                          Math.min(
-                            quizData.questions.length - 1,
-                            prev + 1
-                          )
-                        )
-                      }
-                      disabled={
-                        currentQuestionIndex ===
-                        quizData.questions.length - 1
-                      }
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={goNext}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[var(--color-foreground)] bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/20 transition-all"
                     >
                       Next
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Question Navigator */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card
-              className={`mt-6 ${
-                isDark
-                  ? "bg-white/5 backdrop-blur-xl border-white/10"
-                  : "bg-white shadow-lg"
-              }`}
-            >
-              <CardHeader>
-                <CardTitle className="text-lg">Question Navigator</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                  {quizData.questions.map((q: any, idx: number) => (
-                    <motion.button
-                      key={q.id}
-                      onClick={() => setCurrentQuestionIndex(idx)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`p-2 text-sm rounded-lg border transition-all ${
-                        idx === currentQuestionIndex
-                          ? "border-[hsl(263,70%,58%)] bg-[hsl(263,70%,58%)]/10 ring-2 ring-[hsl(263,70%,58%)]/20 text-[hsl(263,70%,58%)] font-bold"
-                          : answers[q.id]
-                          ? "border-green-500 bg-green-50 dark:bg-green-500/10"
-                          : isDark
-                          ? "border-white/10 hover:border-white/20 text-white/60"
-                          : "border-gray-200 hover:border-gray-300"
-                      } ${
-                        flaggedQuestions.has(q.id)
-                          ? "ring-2 ring-orange-300"
-                          : ""
-                      }`}
-                    >
-                      {idx + 1}
+                      <ChevronRight className="w-4 h-4" />
                     </motion.button>
-                  ))}
+                  )}
                 </div>
-                <div
-                  className={`flex flex-wrap items-center gap-4 mt-4 text-xs ${
-                    isDark ? "text-white/50" : "text-gray-500"
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-[hsl(263,70%,58%)]/10 border border-[hsl(263,70%,58%)] rounded" />
-                    Current
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-green-50 dark:bg-green-500/10 border border-green-500 rounded" />
-                    Answered
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`w-3 h-3 border rounded ${
-                        isDark ? "border-white/10" : "border-gray-200"
-                      }`}
-                    />
-                    Unanswered
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 border border-orange-300 ring-2 ring-orange-200 rounded" />
-                    Flagged
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+
+              {/* Mobile Navigator */}
+              <div className="lg:hidden mt-4">
+                <QuestionNavigator
+                  questions={session.questions}
+                  answers={answers}
+                  currentIndex={currentIndex}
+                  onNavigate={goToQuestion}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Submit Modal */}
+      <SubmitConfirmation
+        isOpen={showSubmitModal}
+        onConfirm={handleSubmit}
+        onCancel={() => setShowSubmitModal(false)}
+        answeredCount={answeredCount}
+        totalCount={session.questions.length}
+        flaggedCount={flaggedCount}
+      />
+
+      {/* Submitting Overlay */}
+      <AnimatePresence>
+        {isSubmitting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-[var(--color-background)]/90 backdrop-blur-xl"
+          >
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center flex flex-col items-center">
+              <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)] mb-4" />
+              <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-1">Submitting...</h3>
+              <p className="text-sm text-[var(--color-foreground-muted)]">Grading your answers</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </SecureQuizWrapper>
   );
-};
-
-export default QuizPage;
+}

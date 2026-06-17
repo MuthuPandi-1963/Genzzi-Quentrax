@@ -1,0 +1,14 @@
+{
+	"devDependencies": {
+		"concurrently": "^10.0.3"
+	},
+	
+  "scripts": {
+    "web": "pnpm --dir web dev",
+    "server": "pnpm --dir server start:dev",
+    "web:wait": "wait-on tcp:5000 && pnpm run web",
+    "dev": "concurrently --names API,WEB \"pnpm run server\" \"pnpm run web:wait\""
+  }
+
+}
+

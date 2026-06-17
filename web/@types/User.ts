@@ -1,6 +1,6 @@
 // Auto-generated from Prisma model: User
 
-import { Assessment } from './Assessment';
+import { Assessment } from './assessment.types';
 import { AssessmentAssignment } from './AssessmentAssignment';
 import { AssessmentAttempt } from './AssessmentAttempt';
 import { Coins } from './Coins';
