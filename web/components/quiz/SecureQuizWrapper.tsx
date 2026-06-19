@@ -1,108 +1,282 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { AlertTriangle, Expand } from "lucide-react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { AlertTriangle, Expand, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SecurityEventService } from "@/providers/services/security-event.service";
+import { SecurityConstants, ViolationType } from "@/providers/services/Security.constants";
 
-export default function SecureQuizWrapper({ children, maxViolations = 3, onAutoSubmit }: { children: React.ReactNode, maxViolations?: number, onAutoSubmit?: () => void }) {
+interface SecureQuizWrapperProps {
+  children: React.ReactNode;
+  maxViolations?: number;
+  onAutoSubmit?: () => void;
+  quizId?: string;
+  sessionId?: string;
+  userId?: string;
+}
+
+export default function SecureQuizWrapper({
+  children,
+  maxViolations = 3,
+  onAutoSubmit,
+  quizId,
+  sessionId,
+  userId,
+}: SecureQuizWrapperProps) {
   const [warningCount, setWarningCount] = useState(0);
   const [lastWarning, setLastWarning] = useState<string | null>(null);
+  const [violations, setViolations] = useState<any[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const violationTimerRef = useRef<NodeJS.Timeout>();
+  const eventServiceRef = useRef<SecurityEventService | null>(null);
+
+  // Initialize security event service
+  useEffect(() => {
+    eventServiceRef.current = new SecurityEventService({
+      quizId: quizId || "unknown",
+      sessionId: sessionId || `temp_${Date.now()}`,
+      userId: userId || "anonymous",
+    });
+  }, [quizId, sessionId, userId]);
 
   useEffect(() => {
-    // Disable Right Click
+    const eventService = eventServiceRef.current;
+    if (!eventService) return;
+
+    // ────────────────────────────────────────────────────────────────
+    // VIOLATION HANDLERS
+    // ────────────────────────────────────────────────────────────────
+
+    const handleViolation = async (type: ViolationType, message: string) => {
+      setWarningCount((prevCount) => {
+        const newCount = prevCount + 1;
+        
+        const violation = {
+          type,
+          timestamp: new Date(),
+          count: newCount,
+          message,
+        };
+
+        setViolations((prev) => [...prev, violation]);
+        showWarning(`${message} (Warning ${newCount}/${maxViolations})`);
+
+        // Track violation in real-time
+        eventService.trackViolation(type, message);
+
+        // Auto-submit if threshold reached
+        if (newCount >= maxViolations && onAutoSubmit) {
+          alert("Exam auto-submitted due to excessive violations.");
+          eventService.trackAutoSubmit(violations);
+          onAutoSubmit();
+        }
+
+        return newCount;
+      });
+    };
+
+    // ────────────────────────────────────────────────────────────────
+    // FULLSCREEN ENFORCEMENT
+    // ────────────────────────────────────────────────────────────────
+
+    const enforceFullscreen = async () => {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen && !document.fullscreenElement) {
+        try {
+          await elem.requestFullscreen();
+          setIsFullscreen(true);
+        } catch (err) {
+          console.error("Fullscreen request failed:", err);
+          handleViolation(
+            ViolationType.FULLSCREEN_DENIED,
+            "Fullscreen mode required for exam"
+          );
+        }
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+        handleViolation(
+          ViolationType.EXIT_FULLSCREEN,
+          "You exited fullscreen mode"
+        );
+        // Attempt to re-enter fullscreen
+        setTimeout(() => enforceFullscreen(), 500);
+      } else {
+        setIsFullscreen(true);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    // Trigger fullscreen on first interaction
+    const handleFirstInteraction = async () => {
+      await enforceFullscreen();
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("keydown", handleFirstInteraction);
+    };
+
+    document.addEventListener("click", handleFirstInteraction, { once: true });
+    document.addEventListener("keydown", handleFirstInteraction, { once: true });
+
+    // ────────────────────────────────────────────────────────────────
+    // RIGHT-CLICK PREVENTION
+    // ────────────────────────────────────────────────────────────────
+
     const disableRightClick = (e: MouseEvent) => {
       e.preventDefault();
-      showWarning("Right click is disabled during the exam.");
+      handleViolation(
+        ViolationType.RIGHT_CLICK,
+        "Right-click is disabled during the exam"
+      );
     };
 
     document.addEventListener("contextmenu", disableRightClick);
 
-    // Disable Copy/Paste
+    // ────────────────────────────────────────────────────────────────
+    // COPY/PASTE PREVENTION
+    // ────────────────────────────────────────────────────────────────
+
     const disableCopyPaste = (e: ClipboardEvent) => {
       e.preventDefault();
-      showWarning("Copy/Paste is disabled during the exam.");
+      handleViolation(
+        ViolationType.COPY_PASTE,
+        "Copy/Paste is disabled during the exam"
+      );
     };
 
     document.addEventListener("copy", disableCopyPaste);
     document.addEventListener("cut", disableCopyPaste);
     document.addEventListener("paste", disableCopyPaste);
 
-    // Disable Keyboard Shortcuts
+    // ────────────────────────────────────────────────────────────────
+    // KEYBOARD SHORTCUT PREVENTION
+    // ────────────────────────────────────────────────────────────────
+
     const disableShortcuts = (e: KeyboardEvent) => {
-      // Ctrl+C, V, X, etc.
-      if (e.ctrlKey && ["c", "v", "x", "u", "s", "p", "a"].includes(e.key.toLowerCase())) {
-        e.preventDefault();
+      const shortcutsToBlock = [
+        { keys: ["c", "v", "x", "u", "s", "p", "a"], ctrl: true, name: "Copy/Paste shortcuts" },
+        { keys: ["I", "J", "C"], ctrl: true, shift: true, name: "DevTools shortcuts" },
+      ];
+
+      for (const shortcut of shortcutsToBlock) {
+        if (
+          e.ctrlKey === shortcut.ctrl &&
+          e.shiftKey === shortcut.shift &&
+          shortcut.keys.includes(e.key)
+        ) {
+          e.preventDefault();
+          handleViolation(
+            ViolationType.KEYBOARD_SHORTCUT,
+            `${shortcut.name} blocked`
+          );
+          return;
+        }
       }
-      // Alt + Tab (limited browser prevention, but we can try)
-      if (e.altKey && e.key === "Tab") {
-        e.preventDefault();
-      }
-      // F12
+
+      // F12 - DevTools
       if (e.key === "F12") {
         e.preventDefault();
+        handleViolation(
+          ViolationType.DEVTOOLS_SHORTCUT,
+          "DevTools access blocked (F12)"
+        );
       }
-      // Ctrl+Shift+I/J/C
-      if (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) {
+
+      // Ctrl+Shift+K - DevTools console
+      if (e.ctrlKey && e.shiftKey && e.key === "k") {
         e.preventDefault();
+        handleViolation(
+          ViolationType.DEVTOOLS_SHORTCUT,
+          "DevTools access blocked (Ctrl+Shift+K)"
+        );
       }
     };
 
     document.addEventListener("keydown", disableShortcuts);
 
-    // Detect Tab Switching
-    const handleVisibility = () => {
+    // ────────────────────────────────────────────────────────────────
+    // TAB SWITCHING DETECTION
+    // ────────────────────────────────────────────────────────────────
+
+    const handleVisibilityChange = () => {
       if (document.hidden) {
-        handleViolation("TAB_SWITCH", "Tab switching detected!");
+        handleViolation(
+          ViolationType.TAB_SWITCH,
+          "Tab switching detected during exam"
+        );
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Fullscreen Enforcement
-    const enterFullscreen = async () => {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        try {
-          await elem.requestFullscreen();
-        } catch (err) {
-          console.error("Error attempting to enable full-screen mode:", err);
-        }
-      }
-    };
+    // ────────────────────────────────────────────────────────────────
+    // DEVTOOLS DETECTION (ENHANCED)
+    // ────────────────────────────────────────────────────────────────
 
-    // Need to trigger on first interaction since we can't auto-fullscreen without user gesture
-    const handleFirstInteraction = () => {
-      enterFullscreen();
-      document.removeEventListener("click", handleFirstInteraction);
-    };
-    document.addEventListener("click", handleFirstInteraction);
-
-    const fullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        handleViolation("EXIT_FULLSCREEN", "Fullscreen mode is required!");
-        // We can't automatically re-enter without gesture, but we log the violation
-      }
-    };
-
-    document.addEventListener("fullscreenchange", fullscreenChange);
-
-    // DevTools Detection
     const detectDevTools = setInterval(() => {
-      const threshold = 160;
+      const threshold = SecurityConstants.DEVTOOLS_THRESHOLD;
+
+      // Method 1: Window size detection
       if (
         window.outerWidth - window.innerWidth > threshold ||
         window.outerHeight - window.innerHeight > threshold
       ) {
-        handleViolation("DEVTOOLS_OPENED", "Developer tools detected!");
+        handleViolation(
+          ViolationType.DEVTOOLS_OPENED,
+          "Developer tools detected"
+        );
       }
-    }, 2000);
 
-    // Detect Browser Refresh
+      // Method 2: Performance API check
+      if (performance.memory) {
+        const memUsage =
+          (performance.memory.usedJSHeapSize /
+            performance.memory.jsHeapSizeLimit) *
+          100;
+        if (memUsage > SecurityConstants.MEMORY_THRESHOLD) {
+          console.warn("Unusual memory usage detected:", memUsage);
+        }
+      }
+    }, SecurityConstants.DETECTION_INTERVAL);
+
+    // ────────────────────────────────────────────────────────────────
+    // PAGE REFRESH/NAVIGATION PREVENTION
+    // ────────────────────────────────────────────────────────────────
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
+      handleViolation(
+        ViolationType.PAGE_REFRESH,
+        "Page refresh attempt blocked"
+      );
     };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // ────────────────────────────────────────────────────────────────
+    // POINTER/FOCUS LOCK (Optional enhanced security)
+    // ────────────────────────────────────────────────────────────────
+
+    const handlePointerLock = () => {
+      const elem = document.documentElement as any;
+      if (elem.requestPointerLock && !document.pointerLockElement) {
+        try {
+          elem.requestPointerLock();
+        } catch (err) {
+          console.error("Pointer lock failed:", err);
+        }
+      }
+    };
+
+    document.addEventListener("mousemove", handlePointerLock, { once: true });
+
+    // ────────────────────────────────────────────────────────────────
+    // CLEANUP
+    // ────────────────────────────────────────────────────────────────
 
     return () => {
       document.removeEventListener("contextmenu", disableRightClick);
@@ -110,55 +284,54 @@ export default function SecureQuizWrapper({ children, maxViolations = 3, onAutoS
       document.removeEventListener("cut", disableCopyPaste);
       document.removeEventListener("paste", disableCopyPaste);
       document.removeEventListener("keydown", disableShortcuts);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      document.removeEventListener("fullscreenchange", fullscreenChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("mousemove", handlePointerLock);
       clearInterval(detectDevTools);
+      if (violationTimerRef.current) clearTimeout(violationTimerRef.current);
+
+      // Final event submission
+      if (eventService && violations.length > 0) {
+        eventService.submitViolationReport(violations);
+      }
     };
-  }, []);
+  }, [maxViolations, onAutoSubmit, violations]);
 
   const showWarning = (message: string) => {
     setLastWarning(message);
-    setTimeout(() => setLastWarning(null), 3000);
-  };
-
-  const handleViolation = (type: string, message: string) => {
-    setWarningCount((prev) => {
-      const newCount = prev + 1;
-      showWarning(`${message} (Warning ${newCount}/${maxViolations})`);
-      
-      // Log to API
-      fetch("/api/track-warning", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, timestamp: new Date() }),
-      }).catch(console.error);
-
-      if (newCount >= maxViolations && onAutoSubmit) {
-        alert("Exam auto-submitted due to excessive violations.");
-        onAutoSubmit();
-      }
-      return newCount;
-    });
+    if (violationTimerRef.current) clearTimeout(violationTimerRef.current);
+    violationTimerRef.current = setTimeout(
+      () => setLastWarning(null),
+      SecurityConstants.WARNING_DISPLAY_DURATION
+    );
   };
 
   const requestFullscreen = () => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
+    const elem = document.documentElement as any;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(console.error);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0A10] flex flex-col relative select-none">
-      {/* Violation Banner */}
-      <div className={`h-10 px-4 flex items-center justify-between text-sm font-bold text-white transition-colors ${warningCount > 0 ? 'bg-red-600' : 'bg-emerald-600'}`}>
+      {/* Status Banner */}
+      <div
+        className={`h-10 px-4 flex items-center justify-between text-sm font-bold text-white transition-colors ${
+          warningCount > 0 ? "bg-red-600" : "bg-emerald-600"
+        }`}
+      >
         <div className="flex items-center gap-2">
           <ShieldIcon className="w-4 h-4" />
           <span>Proctored Environment Active</span>
+          {isFullscreen && <Lock className="w-3 h-3 ml-2" />}
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={requestFullscreen} className="flex items-center gap-1 hover:text-white/80 transition-colors">
+          <button
+            onClick={requestFullscreen}
+            className="flex items-center gap-1 hover:text-white/80 transition-colors"
+          >
             <Expand className="w-4 h-4" />
             <span>Fullscreen</span>
           </button>
@@ -168,7 +341,7 @@ export default function SecureQuizWrapper({ children, maxViolations = 3, onAutoS
         </div>
       </div>
 
-      {/* Floating Warning Toast */}
+      {/* Violation Toast */}
       <AnimatePresence>
         {lastWarning && (
           <motion.div
@@ -183,16 +356,23 @@ export default function SecureQuizWrapper({ children, maxViolations = 3, onAutoS
         )}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-auto">
-        {children}
-      </div>
+      {/* Content Area */}
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }
 
 function ShieldIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
       <path d="m9 12 2 2 4-4" />
     </svg>
