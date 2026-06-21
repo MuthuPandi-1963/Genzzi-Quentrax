@@ -46,8 +46,8 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const pendingCount = assignments.filter((a) => a.status === "PENDING").length;
-  const inProgressCount = assignments.filter((a) => a.status === "IN_PROGRESS").length;
+  const pendingCount = assignments.filter((a) => a.status === "PENDING" && daysUntil(a.dueDate) >= 0).length;
+  const inProgressCount = assignments.filter((a) => a.status === "IN_PROGRESS" && daysUntil(a.dueDate) >= 0).length;
 
   return (
     <motion.div
@@ -76,13 +76,23 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
 
       <div className="space-y-3">
         {assignments.map((a, i) => {
-          const s = statusConfig[a.status];
+          let s = statusConfig[a.status];
           const days = daysUntil(a.dueDate);
+          const isExpired = (a.status === "PENDING" || a.status === "IN_PROGRESS") && days < 0;
+          
+          if (isExpired) {
+            s = {
+              text: "text-[hsl(0,84%,60%)]",
+              bg: "bg-[hsl(0,84%,60%)]/12",
+              label: "Expired",
+              icon: Circle,
+            };
+          }
           const StatusIcon = s.icon;
 
           const getHref = (status: string, id: string) => {
             if (status === "COMPLETED") return `/student/results/${id}`;
-            if (status === "PENDING" || status === "IN_PROGRESS") return `/student/assessments/${id}/take`;
+            if (!isExpired && (status === "PENDING" || status === "IN_PROGRESS")) return `/student/assessments/${id}/take`;
             return "#";
           };
 
@@ -140,10 +150,10 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
                     <p
                       className={cn(
                         "text-xs font-bold",
-                        days <= 2 ? "text-[hsl(0,84%,60%)]" : days <= 5 ? "text-[hsl(45,95%,55%)]" : isDark ? "text-white/60" : "text-gray-500"
+                        isExpired ? "text-[hsl(0,84%,60%)]" : days <= 2 ? "text-[hsl(0,84%,60%)]" : days <= 5 ? "text-[hsl(45,95%,55%)]" : isDark ? "text-white/60" : "text-gray-500"
                       )}
                     >
-                      {days <= 0 ? "Overdue" : `${days}d left`}
+                      {isExpired ? "Missed" : days <= 0 ? "Due Today" : `${days}d left`}
                     </p>
                     <p className={cn("text-[10px]", isDark ? "text-white/35" : "text-gray-400")}>
                       {formatDate(a.dueDate)}

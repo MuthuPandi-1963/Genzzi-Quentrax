@@ -85,13 +85,7 @@ export default function StudentAssessmentsPage() {
           {assignments.length > 0 ? (
 
             <div className="grid grid-cols-1" >
-
-              <Link href="./my-assessments">
-
               <AssignmentsList assignments={assignments} />
-
-              </Link>
-
             </div>
 
           ) : (

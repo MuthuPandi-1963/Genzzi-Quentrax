@@ -32,19 +32,14 @@ export function StudentTopbar() {
   const isDark = resolvedTheme === "dark";
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [notifOpen, setNotifOpen] = useState(false);
 
   const name = user?.userProfile?.name || user?.username || "Student";
   const avatar = user?.userProfile?.avatar || user?.picture || "";
   const role = user?.userProfile?.role || "STUDENT";
   const coins = user?.userProfile?.coins?.length ?? 0;
-  const streak = 7; // Replace with real data
 
-  const notifs = [
-    { id: 1, title: "Assessment due soon", desc: "Science Mid-Term due in 3 days", time: "just now", color: "bg-[hsl(330,80%,60%)]" },
-    { id: 2, title: "Coins earned!", desc: "You earned 150 coins from Science Quiz", time: "2h ago", color: "bg-[hsl(45,95%,55%)]" },
-    { id: 3, title: "Streak milestone", desc: "7-day streak! Keep it up 🔥", time: "1d ago", color: "bg-[hsl(25,95%,55%)]" },
-  ];
+
+  const streak = user?.userProfile?.streak ?? 0;
 
   return (
     <header
@@ -190,92 +185,7 @@ export function StudentTopbar() {
           </AnimatePresence>
         </motion.button>
 
-        {/* Notifications */}
-        <div className="relative">
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setNotifOpen(!notifOpen)}
-            className={cn(
-              "relative w-9 h-9 rounded-xl flex items-center justify-center border transition-colors",
-              isDark
-                ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
-                : "bg-black/5 border-black/10 text-gray-500 hover:bg-black/10 hover:text-gray-900"
-            )}
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(330,80%,60%)] text-white text-[9px] font-bold flex items-center justify-center">
-              {notifs.length}
-            </span>
-          </motion.button>
 
-          <AnimatePresence>
-            {notifOpen && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0"
-                  style={{ zIndex: 9990 }}
-                  onClick={() => setNotifOpen(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.18 }}
-                  className={cn(
-                    "absolute right-0 top-full mt-2 w-72 rounded-2xl border overflow-hidden",
-                    isDark ? "bg-[hsl(260,45%,9%)] border-white/10" : "bg-white border-black/10"
-                  )}
-                  style={{
-                    zIndex: 9991,
-                    backdropFilter: "blur(16px)",
-                    boxShadow: isDark
-                      ? "0 16px 48px -8px rgba(139,92,246,0.28)"
-                      : "0 16px 48px -8px rgba(139,92,246,0.14)",
-                  }}
-                >
-                  <div
-                    className={cn(
-                      "flex items-center justify-between px-4 py-3 border-b",
-                      isDark ? "border-white/10" : "border-black/10"
-                    )}
-                  >
-                    <h3 className="text-sm font-bold">Notifications</h3>
-                    <button className="text-xs text-[hsl(263,70%,58%)] hover:underline font-medium">
-                      Clear all
-                    </button>
-                  </div>
-                  {notifs.map((n, i) => (
-                    <motion.div
-                      key={n.id}
-                      initial={{ opacity: 0, x: 16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className={cn(
-                        "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors",
-                        isDark ? "hover:bg-white/5" : "hover:bg-black/5"
-                      )}
-                    >
-                      <div className={cn("w-2 h-2 rounded-full mt-1.5 shrink-0", n.color)} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{n.title}</p>
-                        <p className={cn("text-xs truncate mt-0.5", isDark ? "text-white/50" : "text-gray-500")}>
-                          {n.desc}
-                        </p>
-                        <p className={cn("text-[10px] mt-1", isDark ? "text-white/30" : "text-gray-400")}>
-                          {n.time}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
 
         {/* Avatar */}
         <div
