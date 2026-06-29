@@ -49,7 +49,7 @@ const STUDENT_NAV: NavItem[] = [
     id: "quizzes",
     label: "Quizzes",
     icon: BookOpen,
-    href: "/student/quizzes",
+    href: "/quizzes",
     badge: 3,
     badgeColor: "bg-[hsl(263,70%,58%)]",
   },
@@ -74,7 +74,7 @@ const STUDENT_NAV: NavItem[] = [
   { id: "leaderboard", label: "Leaderboard", icon: Trophy, href: "/student/leaderboard" },
   { id: "achievements", label: "Achievements", icon: Award, href: "/student/achievements" },
   { id: "coins", label: "My Coins", icon: Coins, href: "/student/coins" },
-  { id: "topics", label: "Browse Topics", icon: Layers, href: "/student/topics" },
+  { id: "topics", label: "Browse Topics", icon: Layers, href: "/topics" },
   { id: "settings", label: "Settings", icon: Settings, href: "/student/settings" },
 ];
 

@@ -2,9 +2,9 @@
 
 import { QuizStatus } from './enums';
 
-import { Assessment } from './Assessment';
+import { Assessment } from './assessment.types';
 import { CoinsHistory } from './CoinsHistory';
-import { Question } from './Question';
+// import { Question } from './Question';
 import { QuizHistory } from './QuizHistory';
 import { Topic } from './Topic';
 import { User } from './User';
@@ -49,4 +49,30 @@ export interface QuizCreateInput {
   history?: QuizHistory[];
   assessments?: Assessment[];
   coinsHistory?: CoinsHistory[];
+}
+export type AnswerValue = string | string[] | boolean | null;
+
+export interface AnswerState {
+  [questionId: string]: {
+    value: AnswerValue;
+    status: "unanswered" | "answered" | "flagged";
+  };
+}
+export type QuestionType = "MCQ" | "TRUE_FALSE" | "FILL_BLANK" | "CODE";
+
+export interface Question {
+  id: string;
+  questionText: string;
+  questionType: QuestionType;
+  points: number;
+  options?: { id: string; text: string }[];
+  hints?: string[];
+}
+
+export interface QuizSession {
+  attemptId: string;
+  questions: Question[];
+  timeLimit: number;
+  quizTitle: string;
+  totalPoints: number;
 }

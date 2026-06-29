@@ -570,7 +570,7 @@
     transform: translateX(4px);
   }
   .quiz-option-selected {
-    background: hsl(263 70% 58% / 0.15);
+    background: hsla(263, 100%, 31%, 0.15);
     border-color: hsl(263 70% 58% / 0.5);
     box-shadow: 0 0 20px -4px hsl(263 70% 58% / 0.3);
   }

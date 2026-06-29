@@ -612,7 +612,9 @@ useEffect(() => {
                   whileHover={{ scale: 1.3, rotate: [-5, 5, -5, 0] }}
                   transition={{ duration: 0.4 }}
                 >
-                  <img src={cat.imageUrl ?? ""} alt={cat.name} className="w-36 h-36 " />
+                  {cat.imageUrl ? (
+                    <img src={cat.imageUrl} alt={cat.name} className="w-36 h-36 " />
+                  ) : null}
                 </motion.span>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold">{cat.name}</h3>

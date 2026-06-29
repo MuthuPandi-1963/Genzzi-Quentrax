@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { StudentLayout } from "@/components/student/StudentLayout";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Loader2 } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
@@ -20,21 +19,20 @@ export default function LeaderboardPage() {
 
   if (isLoading) {
     return (
-      <StudentLayout>
+
         <div className="flex h-[60vh] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-violet-500" />
             <p className="text-sm text-slate-400">Loading leaderboard...</p>
           </div>
         </div>
-      </StudentLayout>
+
     );
   }
 
   return (
-    <StudentLayout>
-      <div className="space-y-6 max-w-4xl mx-auto pb-12">
-        <div className="mb-8 text-center md:text-left">
+      <div className="space-y-6 max-w-4xl mx-auto h-screen pb-12">
+        <div className="mb-8 text-center grid item-center justify-center h-full md:text-left">
           <h1 className="text-3xl font-black bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent flex items-center justify-center md:justify-start gap-3">
             <Trophy className="w-8 h-8 text-amber-500" /> Global Leaderboard
           </h1>
@@ -111,6 +109,5 @@ export default function LeaderboardPage() {
           )}
         </motion.div>
       </div>
-    </StudentLayout>
   );
 }

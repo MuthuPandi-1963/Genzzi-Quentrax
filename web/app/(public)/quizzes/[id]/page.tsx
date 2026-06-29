@@ -208,8 +208,8 @@ export default function QuizDetailPage() {
                   <div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-indigo-500 p-0.5">
                     <img
                       src={
-                        quiz.creator?.avatar ??
-                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${quiz.creator?.name ?? "xyz"}`
+                        quiz.creator?.avatar ||
+                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${quiz.creator?.name || "xyz"}`
                       }
                       alt="Avatar"
                       className="w-full h-full rounded-full bg-white dark:bg-gray-900"
@@ -316,7 +316,7 @@ export default function QuizDetailPage() {
               </p>
 
               <Link
-                href={isAuthenticated ? "/" : "/login"}
+                href={isAuthenticated ? `/student/quizzes/${quiz.id}/take` : "/login"}
                 className="
                   flex items-center justify-center gap-2
                   w-full py-3 bg-blue-600 hover:bg-blue-700
